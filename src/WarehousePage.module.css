@@ -1,0 +1,280 @@
+.warehousePage {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Стили для верхней панели */
+.centralLine {
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.dropdownContainer {
+  display: inline-block;
+  position: relative;
+}
+
+.pageTitle {
+  color: #2c3e50;
+  cursor: pointer;
+  padding: 10px 20px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.dropdownContent {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.dropdownButton {
+  display: block;
+  width: 200px;
+  padding: 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.dropdownButton:hover {
+  background: #f1f1f1;
+}
+
+.active {
+  background: #e9ecef !important;
+  font-weight: bold;
+}
+
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formField label {
+  font-weight: 500;
+  color: #34495e;
+}
+
+.formField input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.formActions {
+  grid-column: span 2;
+  text-align: center;
+}
+
+.submitButton {
+  background: #3498db;
+  color: white;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.submitButton:hover {
+  background: #2980b9;
+}
+
+.qrContainer {
+  cursor: zoom-in;
+  margin: 20px 0;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.saveButton {
+  background: #27ae60;
+  color: white;
+  padding: 10px 25px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Стили для таблицы */
+.nomenclature {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.pdfHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.pdfButton {
+  background: #2ecc71;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdfButton:hover {
+  background: #27ae60;
+}
+
+.productsTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.productsTable th,
+.productsTable td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.productsTable th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+
+.deleteButton {
+  background: #e74c3c;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  background: #c0392b;
+}
+
+.summary {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+/* Модальное окно */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContent {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+
+.productsTable td {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qrGeneration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.qrCode {
+  order: -1; /* Перемещаем QR-код в начало */
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.qrForm {
+  width: 100%;
+  max-width: 600px;
+}
+
+.formField {
+  margin-bottom: 1.5rem;
+}
+.exportButtons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.excelButton {
+  background: #217346;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.excelButton:hover {
+  background: #1a5c38;
+}
+
+.importButton {
+  background: #f39c12;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s;
+}
+
+.importButton:hover {
+  background: #e67e22;
+}
+
+.importButton input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}

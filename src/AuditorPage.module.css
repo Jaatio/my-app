@@ -1,0 +1,262 @@
+.auditorPage {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .tabsContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .tabButton {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    background-color: #ddd;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+  }
+  
+  .activeTab {
+    background-color: #4285f4;
+    color: #fff;
+  }
+  
+  /* Dropdown для вкладок */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdownContent {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    z-index: 1;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+  
+  .dropdownContent button {
+    color: black;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    background-color: #f9f9f9;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+  }
+  
+  .dropdownContent button:hover {
+    background-color: #ddd;
+  }
+  
+  .dropdown:hover .dropdownContent {
+    display: block;
+  }
+  
+  .tabContent {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 4px;
+  }
+  
+  /* Стили для задач (если есть) */
+  .tasksContainer {
+    width: 100%;
+  }
+  
+  .tasksTable {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .tasksTable th,
+  .tasksTable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  /* Стили для инвентаризации */
+  .inventoryContainer {
+    width: 100%;
+  }
+  
+  .inventoryActions {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .inventoryActions button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .inventoryList {
+    margin-top: 20px;
+  }
+  
+  .inventoryItem {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  
+  .inventoryHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f2f2f2;
+    gap: 10px;
+  }
+  
+  .creationDate {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .expandButton {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
+  .inventoryContent {
+    display: flex;
+    border-top: 1px solid #ccc;
+  }
+  
+  .inventoryPart {
+    flex: 1;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+  }
+  
+  .inventoryPart:last-child {
+    border-right: none;
+  }
+  
+  /* Новые стили для статуса и кнопок */
+  .statusCheckbox {
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  .completeButton {
+    margin-right: 15px;
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .completeButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .statusBadge {
+    margin-left: 15px;
+    color: #666;
+    font-style: italic;
+    font-size: 0.9em;
+  }
+  
+  .inventoryHeader > span {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .inventoryActions button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .inventoryActions button:nth-child(2) {
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    border-radius: 3px;
+  }
+  
+  .inventoryActions button:nth-child(3) {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 3px;
+  }
+  
+  .inventoryContent {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 20px;
+    padding: 15px;
+  }
+  
+  .discrepancySection {
+    border-left: 2px solid #eee;
+    border-right: 2px solid #eee;
+    padding: 0 20px;
+  }
+  
+  .productRow {
+    padding: 8px;
+    margin: 5px 0;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  
+  .productRow div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  
+  .discrepancyItem {
+    margin: 10px 0;
+    padding: 10px;
+    background: #fff3cd;
+    border-radius: 4px;
+  }
+  
+  .discrepancyField {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+  }
+  
+  .positive {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .negative {
+    color: #dc3545;
+    font-weight: bold;
+  }
+  
+  .noDiscrepancies {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 10px;
+  }
+
+ 

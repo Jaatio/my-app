@@ -1,0 +1,115 @@
+/* Общие стили для страницы администратора */
+.admin-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.tabs-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Стили для кнопок вкладок */
+.tab-button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  border: none;
+  background-color: #ddd;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.tab-button.active {
+  background-color: #4285f4;
+  color: #fff;
+}
+
+/* Выпадающее меню для "Поставщики" */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  z-index: 1;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.dropdown-content button {
+  color: black;
+  padding: 10px 16px;
+  text-decoration: none;
+  display: block;
+  background-color: #f9f9f9;
+  border: none;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+
+.dropdown-content button:hover {
+  background-color: #ddd;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Стили для содержимого вкладок */
+.tab-content {
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+/* Таблицы для задач и поставщиков */
+.task-table,
+.supplier-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.task-table th,
+.task-table td,
+.supplier-table th,
+.supplier-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+
+.task-table input,
+.task-table select,
+.task-table textarea,
+.supplier-table input {
+  width: 100%;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+.form-actions {
+  text-align: right;
+}
+
+.form-actions button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.task-table a {
+  color: #4285f4;
+  text-decoration: none;
+}
+
+.task-table a:hover {
+  text-decoration: underline;
+}
