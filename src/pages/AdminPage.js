@@ -1,22 +1,53 @@
-import React, { useState, useEffect } from "react";
-import { database } from "./firebase";
-import { ref, push, onValue, update, remove } from "firebase/database";
-import "./AdminPage.css";
+import React, { useState, useEffect } from 'react';
+import { database, auth } from '../firebase';
+import { ref, push, onValue, update, remove } from 'firebase/database';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import './AdminPage.css';
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState("createTask");
+  const [activeTab, setActiveTab] = useState('registrationRequests');
+  const [registrationRequests, setRegistrationRequests] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [newSupplier, setNewSupplier] = useState({
-    designation: "",
-    fullName: "",
-    url: "",
-    note: ""
+    designation: '',
+    fullName: '',
+    url: '',
+    note: ''
   });
 
-  // Подписка на задачи (как было)
+  // Подписка на запросы на регистрацию
   useEffect(() => {
-    const tasksRef = ref(database, "tasks/");
+    const requestsRef = ref(database, 'registrationRequests/');
+    onValue(requestsRef, (snapshot) => {
+      const data = snapshot.val();
+      let requestsArray = [];
+      for (let id in data) {
+        if (data[id].status === 'pending') {
+          requestsArray.push({ id, ...data[id] });
+        }
+      }
+      setRegistrationRequests(requestsArray);
+    });
+  }, []);
+
+  // Подписка на список работников
+  useEffect(() => {
+    const employeesRef = ref(database, 'employees/');
+    onValue(employeesRef, (snapshot) => {
+      const data = snapshot.val();
+      let employeesArray = [];
+      for (let id in data) {
+        employeesArray.push({ id, ...data[id] });
+      }
+      setEmployees(employeesArray);
+    });
+  }, []);
+
+  // Подписка на задачи
+  useEffect(() => {
+    const tasksRef = ref(database, 'tasks/');
     onValue(tasksRef, (snapshot) => {
       const data = snapshot.val();
       let tasksArray = [];
@@ -29,7 +60,7 @@ const AdminPage = () => {
 
   // Подписка на поставщиков
   useEffect(() => {
-    const suppliersRef = ref(database, "suppliers/");
+    const suppliersRef = ref(database, 'suppliers/');
     onValue(suppliersRef, (snapshot) => {
       const data = snapshot.val();
       let suppliersArray = [];
@@ -40,24 +71,63 @@ const AdminPage = () => {
     });
   }, []);
 
+  // Принятие запроса на регистрацию
+  const handleApproveRequest = async (request) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, request.email, request.password);
+      const user = userCredential.user;
+
+      const employeeData = {
+        email: request.email,
+        fullName: request.fullName,
+        role: request.role,
+        uid: user.uid
+      };
+      await push(ref(database, 'employees/'), employeeData);
+      await update(ref(database, `registrationRequests/${request.id}`), { status: 'approved' });
+      setRegistrationRequests((prev) => prev.filter((req) => req.id !== request.id));
+    } catch (error) {
+      console.error('Ошибка при создании пользователя:', error);
+    }
+  };
+
+  // Отклонение запроса на регистрацию
+  const handleRejectRequest = async (id) => {
+    try {
+      await update(ref(database, `registrationRequests/${id}`), { status: 'rejected' });
+      setRegistrationRequests((prev) => prev.filter((req) => req.id !== id));
+    } catch (error) {
+      console.error('Ошибка при отклонении запроса:', error);
+    }
+  };
+
+  // Удаление работника
+  const handleDeleteEmployee = async (id) => {
+    try {
+      await remove(ref(database, `employees/${id}`));
+    } catch (error) {
+      console.error('Ошибка при удалении работника:', error);
+    }
+  };
+
   // Обработчик отправки формы создания задачи
   const handleTaskSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const newTask = {
-      sendDate: formData.get("sendDate"),
-      finishDate: formData.get("finishDate"),
-      task: formData.get("task"),
-      subject: formData.get("subject"),
-      responsible: formData.get("responsible"),
-      status: formData.get("status") || "В ожидании"
+      sendDate: formData.get('sendDate'),
+      finishDate: formData.get('finishDate'),
+      task: formData.get('task'),
+      subject: formData.get('subject'),
+      responsible: formData.get('responsible'),
+      status: formData.get('status') || 'В ожидании'
     };
 
     try {
-      await push(ref(database, "tasks/"), newTask);
+      await push(ref(database, 'tasks/'), newTask);
       event.target.reset();
     } catch (error) {
-      console.error("Ошибка при сохранении задачи:", error);
+      console.error('Ошибка при сохранении задачи:', error);
     }
   };
 
@@ -66,25 +136,24 @@ const AdminPage = () => {
     const currentTime = new Date();
     const responseTime = currentTime.toLocaleTimeString();
     const responseDate = currentTime.toLocaleDateString();
-  
+
     try {
-      await update(ref(database, "tasks/" + id), { 
-        status: "Отменено",
+      await update(ref(database, 'tasks/' + id), {
+        status: 'Отменено',
         responseTime: responseTime,
         responseDate: responseDate
       });
     } catch (error) {
-      console.error("Ошибка при обновлении задачи:", error);
+      console.error('Ошибка при обновлении задачи:', error);
     }
   };
-  
 
   // Удаление задачи
   const handleDelete = async (id) => {
     try {
-      await remove(ref(database, "tasks/" + id));
+      await remove(ref(database, 'tasks/' + id));
     } catch (error) {
-      console.error("Ошибка при удалении задачи:", error);
+      console.error('Ошибка при удалении задачи:', error);
     }
   };
 
@@ -97,28 +166,24 @@ const AdminPage = () => {
   // Обработчик добавления поставщика
   const handleAddSupplier = async (e) => {
     e.preventDefault();
-    if (
-      !newSupplier.designation ||
-      !newSupplier.fullName ||
-      !newSupplier.url
-    ) {
-      alert("Заполните обязательные поля: Обозначение, Полное наименование и URL.");
+    if (!newSupplier.designation || !newSupplier.fullName || !newSupplier.url) {
+      alert('Заполните обязательные поля: Обозначение, Полное наименование и URL.');
       return;
     }
     try {
-      await push(ref(database, "suppliers/"), newSupplier);
-      setNewSupplier({ designation: "", fullName: "", url: "", note: "" });
+      await push(ref(database, 'suppliers/'), newSupplier);
+      setNewSupplier({ designation: '', fullName: '', url: '', note: '' });
     } catch (error) {
-      console.error("Ошибка при добавлении поставщика:", error);
+      console.error('Ошибка при добавлении поставщика:', error);
     }
   };
 
   // Удаление поставщика
   const handleDeleteSupplier = async (id) => {
     try {
-      await remove(ref(database, "suppliers/" + id));
+      await remove(ref(database, 'suppliers/' + id));
     } catch (error) {
-      console.error("Ошибка при удалении поставщика:", error);
+      console.error('Ошибка при удалении поставщика:', error);
     }
   };
 
@@ -127,34 +192,94 @@ const AdminPage = () => {
       {/* Вкладки верхнего меню */}
       <div className="tabs-container">
         <button
-          className={`tab-button ${activeTab === "createTask" ? "active" : ""}`}
-          onClick={() => setActiveTab("createTask")}
+          className={`tab-button ${activeTab === 'registrationRequests' ? 'active' : ''}`}
+          onClick={() => setActiveTab('registrationRequests')}
+        >
+          Запросы на регистрацию
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'employees' ? 'active' : ''}`}
+          onClick={() => setActiveTab('employees')}
+        >
+          Работники
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'createTask' ? 'active' : ''}`}
+          onClick={() => setActiveTab('createTask')}
         >
           Создание задачи
         </button>
-
-        {/* Выпадающее меню для "Поставщики" */}
         <div className="dropdown">
-          <button className={`tab-button ${activeTab === "suppliers" || activeTab === "ordersHistory" ? "active" : ""}`}>
+          <button className={`tab-button ${activeTab === 'suppliers' || activeTab === 'ordersHistory' ? 'active' : ''}`}>
             Поставщики
           </button>
           <div className="dropdown-content">
-            <button onClick={() => setActiveTab("suppliers")}>Поставщики</button>
-            <button onClick={() => setActiveTab("ordersHistory")}>История заказов</button>
+            <button onClick={() => setActiveTab('suppliers')}>Поставщики</button>
+            <button onClick={() => setActiveTab('ordersHistory')}>История заказов</button>
           </div>
         </div>
-
-        <button
-          className={`tab-button ${activeTab === "other" ? "active" : ""}`}
-          onClick={() => setActiveTab("other")}
-        >
-          Другая вкладка
-        </button>
       </div>
 
       {/* Содержимое вкладок */}
       <div className="tab-content">
-        {activeTab === "createTask" && (
+        {activeTab === 'registrationRequests' && (
+          <div className="registration-requests">
+            <h2>Запросы на регистрацию</h2>
+            <table className="requests-table">
+              <thead>
+                <tr>
+                  <th>ФИО</th>
+                  <th>Email</th>
+                  <th>Роль</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registrationRequests.map((request) => (
+                  <tr key={request.id}>
+                    <td>{request.fullName}</td>
+                    <td>{request.email}</td>
+                    <td>{request.role}</td>
+                    <td>
+                      <button onClick={() => handleApproveRequest(request)}>Принять</button>
+                      <button onClick={() => handleRejectRequest(request.id)}>Отклонить</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'employees' && (
+          <div className="employees-tab">
+            <h2>Работники</h2>
+            <table className="employees-table">
+              <thead>
+                <tr>
+                  <th>ФИО</th>
+                  <th>Email</th>
+                  <th>Роль</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((employee) => (
+                  <tr key={employee.id}>
+                    <td>{employee.fullName}</td>
+                    <td>{employee.email}</td>
+                    <td>{employee.role}</td>
+                    <td>
+                      <button onClick={() => handleDeleteEmployee(employee.id)}>Удалить</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'createTask' && (
           <div className="create-task">
             <h2>Создание задачи</h2>
             <form onSubmit={handleTaskSubmit}>
@@ -258,10 +383,9 @@ const AdminPage = () => {
           </div>
         )}
 
-        {activeTab === "suppliers" && (
+        {activeTab === 'suppliers' && (
           <div className="suppliers-tab">
             <h2>Поставщики</h2>
-            {/* Форма добавления поставщика */}
             <form onSubmit={handleAddSupplier}>
               <table className="supplier-table">
                 <thead>
@@ -322,7 +446,6 @@ const AdminPage = () => {
               </table>
             </form>
 
-            {/* Список поставщиков */}
             <h2>Список поставщиков</h2>
             <table className="supplier-table">
               <thead>
@@ -353,15 +476,9 @@ const AdminPage = () => {
           </div>
         )}
 
-        {activeTab === "ordersHistory" && (
+        {activeTab === 'ordersHistory' && (
           <div className="orders-history">
             <p>История заказов (будет реализовано позже).</p>
-          </div>
-        )}
-
-        {activeTab === "other" && (
-          <div className="other-tab">
-            <p>Содержимое другой вкладки (будет реализовано позже).</p>
           </div>
         )}
       </div>

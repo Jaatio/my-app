@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { database } from "./firebase";
+import { database } from "../firebase";
 import { ref, onValue, remove, push } from "firebase/database";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";

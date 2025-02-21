@@ -113,3 +113,34 @@
 .task-table a:hover {
   text-decoration: underline;
 }
+
+/* src/pages/AdminPage.css */
+.registration-requests,
+.employees-tab {
+  margin: 20px;
+}
+
+.requests-table,
+.employees-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.requests-table th,
+.requests-table td,
+.employees-table th,
+.employees-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.requests-table th,
+.employees-table th {
+  background-color: #f4f4f4;
+}
+
+button {
+  margin-right: 5px;
+}

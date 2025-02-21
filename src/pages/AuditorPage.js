@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { database } from "./firebase";
+import { database } from "../firebase";
 import { ref, onValue, update, remove, push, set } from "firebase/database";
 import html2canvas from "html2canvas";
 import styles from "./AuditorPage.module.css";
