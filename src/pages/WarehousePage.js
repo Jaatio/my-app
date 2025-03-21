@@ -7,9 +7,13 @@ import "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import styles from "./WarehousePage.module.css";
+import ShipmentSection from '../components/ShipmentSection';
+import ShipmentHistory from '../components/ShipmentHistory';
+import ReportSection from '../components/ReportSection';
+
 
 const WarehousePage = () => {
-  const [selectedOption, setSelectedOption] = useState("generateQR");
+  const [selectedOption, setSelectedOption] = useState("shipment");
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [formData, setFormData] = useState({
     componentName: "",
@@ -262,8 +266,9 @@ const WarehousePage = () => {
           onMouseEnter={() => setDropdownVisible(true)}
           onMouseLeave={() => setDropdownVisible(false)}
         >
-          <h1 className={styles.pageTitle}>Работа с номенклатурой</h1>
+          <h1 className={styles.pageTitle}>Выбор действия</h1>
           {dropdownVisible && (
+            
             <div className={styles.dropdownContent}>
               <button
                 className={`${styles.dropdownButton} ${
@@ -281,6 +286,31 @@ const WarehousePage = () => {
               >
                 Номенклатура
               </button>
+              <button
+                className={`${styles.dropdownButton} ${
+                  selectedOption === "shipment" ? styles.active : ""
+                }`}
+                onClick={() => setSelectedOption("shipment")}
+              >
+                Отправка товара
+              </button>
+              <button
+                className={`${styles.dropdownButton} ${
+                  selectedOption === "shipmentHistory" ? styles.active : ""
+                }`}
+                onClick={() => setSelectedOption("shipmentHistory")} // Только изменение состояния
+              >
+                История отправок
+              </button>
+              <button
+                className={`${styles.dropdownButton} ${
+                  selectedOption === "sendReport" ? styles.active : ""
+                }`}
+                onClick={() => setSelectedOption("sendReport")}
+              >
+                Отправка отчета
+              </button>
+              
             </div>
           )}
         </div>
@@ -418,6 +448,10 @@ const WarehousePage = () => {
         </div>
       )}
 
+      {selectedOption === "shipment" && <ShipmentSection />}
+      {selectedOption === "shipmentHistory" && <ShipmentHistory />} 
+      {selectedOption === "sendReport" && <ReportSection />}
+      {selectedOption === "reportHistory" && <ReportSection />}
       {isModalOpen && (
         <div className={styles.modalOverlay} onClick={toggleModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>

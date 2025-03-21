@@ -9,13 +9,18 @@
   border-bottom: 2px solid #ccc;
   margin-bottom: 30px;
   position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .dropdownContainer {
-  display: inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: relative;
+  margin-bottom: 20px; /* Уменьшите или увеличьте отступ по необходимости */
 }
-
 .pageTitle {
   color: #2c3e50;
   cursor: pointer;
@@ -53,6 +58,48 @@
   font-weight: bold;
 }
 
+.shipmentDropdownContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.shipmentButton {
+  background: #3498db;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.shipmentButton:hover {
+  background: #2980b9;
+}
+
+.shipmentDropdownContent {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.shipmentHistoryButton {
+  display: block;
+  width: 200px;
+  padding: 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.shipmentHistoryButton:hover {
+  background: #f1f1f1;
+}
 
 .formField {
   display: flex;
@@ -277,4 +324,27 @@
   left: 0;
   top: 0;
   opacity: 0;
+}
+
+/* Добавить к существующим стилям */
+.importButton {
+  background: #4CAF50;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.importButton:hover {
+  background: #45a049;
+}
+
+.productsTable a {
+  color: #2196F3;
+  text-decoration: none;
+}
+
+.productsTable a:hover {
+  text-decoration: underline;
 }

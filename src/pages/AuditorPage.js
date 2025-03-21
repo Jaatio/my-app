@@ -3,6 +3,7 @@ import { database } from "../firebase";
 import { ref, onValue, update, remove, push, set } from "firebase/database";
 import html2canvas from "html2canvas";
 import styles from "./AuditorPage.module.css";
+import ReportSection from '../components/ReportSection';
 
 const AuditorPage = () => {
   const [activeTab, setActiveTab] = useState("tasks");
@@ -353,13 +354,11 @@ const AuditorPage = () => {
           </div>
         </div>
         <button
-          className={`${styles.tabButton} ${
-            activeTab === "other" ? styles.activeTab : ""
-          }`}
-          onClick={() => setActiveTab("other")}
-        >
-          Другая вкладка
-        </button>
+            className={`${styles.tabButton} ${activeTab === "reports" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("reports")}
+          >
+            Отчеты
+          </button>
       </div>
 
       {/* Содержимое выбранной вкладки */}
@@ -505,11 +504,7 @@ const AuditorPage = () => {
           </div>
         )}
 
-        {activeTab === "other" && (
-          <div>
-            <p>Содержимое другой вкладки (будет реализовано позже).</p>
-          </div>
-        )}
+        {activeTab === "reports" && <ReportSection />}
       </div>
     </div>
   );

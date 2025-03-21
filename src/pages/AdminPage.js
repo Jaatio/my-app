@@ -3,6 +3,9 @@ import { database, auth } from '../firebase';
 import { ref, push, onValue, update, remove } from 'firebase/database';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import './AdminPage.css';
+import WarehouseTab from '../components/WarehouseTab'; // Import the new component
+import ReportsTab from '../components/ReportsTab';
+
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState('registrationRequests');
@@ -14,10 +17,10 @@ const AdminPage = () => {
     designation: '',
     fullName: '',
     url: '',
-    note: ''
+    note: '',
   });
 
-  // Подписка на запросы на регистрацию
+  // Existing useEffect hooks remain unchanged
   useEffect(() => {
     const requestsRef = ref(database, 'registrationRequests/');
     onValue(requestsRef, (snapshot) => {
@@ -32,7 +35,6 @@ const AdminPage = () => {
     });
   }, []);
 
-  // Подписка на список работников
   useEffect(() => {
     const employeesRef = ref(database, 'employees/');
     onValue(employeesRef, (snapshot) => {
@@ -45,7 +47,6 @@ const AdminPage = () => {
     });
   }, []);
 
-  // Подписка на задачи
   useEffect(() => {
     const tasksRef = ref(database, 'tasks/');
     onValue(tasksRef, (snapshot) => {
@@ -58,7 +59,6 @@ const AdminPage = () => {
     });
   }, []);
 
-  // Подписка на поставщиков
   useEffect(() => {
     const suppliersRef = ref(database, 'suppliers/');
     onValue(suppliersRef, (snapshot) => {
@@ -71,17 +71,16 @@ const AdminPage = () => {
     });
   }, []);
 
-  // Принятие запроса на регистрацию
+  // Existing handler functions remain unchanged
   const handleApproveRequest = async (request) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, request.email, request.password);
       const user = userCredential.user;
-
       const employeeData = {
         email: request.email,
         fullName: request.fullName,
         role: request.role,
-        uid: user.uid
+        uid: user.uid,
       };
       await push(ref(database, 'employees/'), employeeData);
       await update(ref(database, `registrationRequests/${request.id}`), { status: 'approved' });
@@ -91,7 +90,6 @@ const AdminPage = () => {
     }
   };
 
-  // Отклонение запроса на регистрацию
   const handleRejectRequest = async (id) => {
     try {
       await update(ref(database, `registrationRequests/${id}`), { status: 'rejected' });
@@ -101,7 +99,6 @@ const AdminPage = () => {
     }
   };
 
-  // Удаление работника
   const handleDeleteEmployee = async (id) => {
     try {
       await remove(ref(database, `employees/${id}`));
@@ -110,7 +107,6 @@ const AdminPage = () => {
     }
   };
 
-  // Обработчик отправки формы создания задачи
   const handleTaskSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
@@ -120,9 +116,8 @@ const AdminPage = () => {
       task: formData.get('task'),
       subject: formData.get('subject'),
       responsible: formData.get('responsible'),
-      status: formData.get('status') || 'В ожидании'
+      status: formData.get('status') || 'В ожидании',
     };
-
     try {
       await push(ref(database, 'tasks/'), newTask);
       event.target.reset();
@@ -131,24 +126,21 @@ const AdminPage = () => {
     }
   };
 
-  // Обновление статуса задачи на "Отменено"
   const handleCancel = async (id) => {
     const currentTime = new Date();
     const responseTime = currentTime.toLocaleTimeString();
     const responseDate = currentTime.toLocaleDateString();
-
     try {
       await update(ref(database, 'tasks/' + id), {
         status: 'Отменено',
         responseTime: responseTime,
-        responseDate: responseDate
+        responseDate: responseDate,
       });
     } catch (error) {
       console.error('Ошибка при обновлении задачи:', error);
     }
   };
 
-  // Удаление задачи
   const handleDelete = async (id) => {
     try {
       await remove(ref(database, 'tasks/' + id));
@@ -157,13 +149,11 @@ const AdminPage = () => {
     }
   };
 
-  // Обработчик изменения полей формы поставщика
   const handleSupplierInputChange = (e) => {
     const { name, value } = e.target;
     setNewSupplier((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Обработчик добавления поставщика
   const handleAddSupplier = async (e) => {
     e.preventDefault();
     if (!newSupplier.designation || !newSupplier.fullName || !newSupplier.url) {
@@ -178,7 +168,6 @@ const AdminPage = () => {
     }
   };
 
-  // Удаление поставщика
   const handleDeleteSupplier = async (id) => {
     try {
       await remove(ref(database, 'suppliers/' + id));
@@ -189,7 +178,7 @@ const AdminPage = () => {
 
   return (
     <div className="admin-page">
-      {/* Вкладки верхнего меню */}
+      {/* Tabs Navigation */}
       <div className="tabs-container">
         <button
           className={`tab-button ${activeTab === 'registrationRequests' ? 'active' : ''}`}
@@ -210,7 +199,9 @@ const AdminPage = () => {
           Создание задачи
         </button>
         <div className="dropdown">
-          <button className={`tab-button ${activeTab === 'suppliers' || activeTab === 'ordersHistory' ? 'active' : ''}`}>
+          <button
+            className={`tab-button ${activeTab === 'suppliers' || activeTab === 'ordersHistory' ? 'active' : ''}`}
+          >
             Поставщики
           </button>
           <div className="dropdown-content">
@@ -218,9 +209,23 @@ const AdminPage = () => {
             <button onClick={() => setActiveTab('ordersHistory')}>История заказов</button>
           </div>
         </div>
+        {/* New Warehouse Tab */}
+        <button
+          className={`tab-button ${activeTab === 'warehouse' ? 'active' : ''}`}
+          onClick={() => setActiveTab('warehouse')}
+        >
+          Склад
+        </button>
       </div>
 
-      {/* Содержимое вкладок */}
+      <button
+        className={`tab-button ${activeTab === 'viewReports' ? 'active' : ''}`}
+        onClick={() => setActiveTab('viewReports')}
+      >
+        Просмотр отчетов
+      </button>
+
+      {/* Tab Content */}
       <div className="tab-content">
         {activeTab === 'registrationRequests' && (
           <div className="registration-requests">
@@ -322,12 +327,7 @@ const AdminPage = () => {
                       />
                     </td>
                     <td>
-                      <input
-                        type="text"
-                        name="responsible"
-                        placeholder="Исполнитель"
-                        required
-                      />
+                      <input type="text" name="responsible" placeholder="Исполнитель" required />
                     </td>
                     <td>
                       <select name="status" required>
@@ -344,7 +344,6 @@ const AdminPage = () => {
                 </tbody>
               </table>
 
-              {/* Список задач */}
               <h2>Список задач</h2>
               <table className="task-table">
                 <thead>
@@ -368,12 +367,8 @@ const AdminPage = () => {
                       <td>{task.responsible}</td>
                       <td>{task.status}</td>
                       <td>
-                        <button onClick={() => handleCancel(task.id)}>
-                          Отменить
-                        </button>
-                        <button onClick={() => handleDelete(task.id)}>
-                          Удалить
-                        </button>
+                        <button onClick={() => handleCancel(task.id)}>Отменить</button>
+                        <button onClick={() => handleDelete(task.id)}>Удалить</button>
                       </td>
                     </tr>
                   ))}
@@ -465,9 +460,7 @@ const AdminPage = () => {
                     <td>{supplier.url}</td>
                     <td>{supplier.note}</td>
                     <td>
-                      <button onClick={() => handleDeleteSupplier(supplier.id)}>
-                        Удалить
-                      </button>
+                      <button onClick={() => handleDeleteSupplier(supplier.id)}>Удалить</button>
                     </td>
                   </tr>
                 ))}
@@ -481,6 +474,10 @@ const AdminPage = () => {
             <p>История заказов (будет реализовано позже).</p>
           </div>
         )}
+
+        {/* Render WarehouseTab when selected */}
+        {activeTab === 'warehouse' && <WarehouseTab />}
+        {activeTab === 'viewReports' && <ReportsTab />}
       </div>
     </div>
   );
