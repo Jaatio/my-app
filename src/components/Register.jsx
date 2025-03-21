@@ -1,8 +1,10 @@
 // src/components/Register.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { database } from '../firebase'; // Импортируем database из firebase.js
 import { ref, push } from 'firebase/database'; // Импортируем методы для работы с базой данных
+import { MdEmail, MdPerson } from 'react-icons/md';
+import { RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiUserSettingsLine } from 'react-icons/ri';
 import styles from './Login.module.css';
 
 const Register = () => {
@@ -11,7 +13,15 @@ const Register = () => {
   const [role, setRole] = useState('auditor'); // Значение по умолчанию - Аудитор
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add('auth-page');
+    return () => {
+      document.body.classList.remove('auth-page');
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,46 +51,67 @@ const Register = () => {
   return (
     <div className={styles.loginContainer}>
       <form className={styles.loginForm} onSubmit={handleSubmit}>
+        <h1 className={styles.title}>Регистрация в Saud</h1>
+
         <div className={styles.inputGroup}>
-          <input
-            type="email"
-            placeholder="Введите вашу электронную почту"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={styles.input}
-          />
+          <div className={styles.inputWrapper}>
+            <MdEmail className={styles.inputIcon} />
+            <input
+              type="email"
+              placeholder="Введите вашу электронную почту"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={styles.input}
+            />
+          </div>
         </div>
 
         <div className={styles.inputGroup}>
-          <input
-            type="text"
-            placeholder="Введите ваше ФИО"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className={styles.input}
-          />
+          <div className={styles.inputWrapper}>
+            <MdPerson className={styles.inputIcon} />
+            <input
+              type="text"
+              placeholder="Введите ваше ФИО"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={styles.input}
+            />
+          </div>
         </div>
 
         <div className={styles.inputGroup}>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className={styles.input}
-          >
-            <option value="auditor">Аудитор</option>
-            <option value="warehouse">Складской оператор</option>
-            <option value="admin">Администратор</option>
-          </select>
+          <div className={styles.inputWrapper}>
+            <RiUserSettingsLine className={styles.inputIcon} />
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className={styles.input}
+            >
+              <option value="auditor">Аудитор</option>
+              <option value="warehouse">Складской оператор</option>
+              <option value="admin">Администратор</option>
+            </select>
+          </div>
         </div>
 
         <div className={styles.inputGroup}>
-          <input
-            type="password"
-            placeholder="Введите ваш пароль"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={styles.input}
-          />
+          <div className={styles.inputWrapper}>
+            <RiLockPasswordLine className={styles.inputIcon} />
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Введите ваш пароль"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={styles.input}
+            />
+            <button
+              type="button"
+              className={styles.showPasswordButton}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <RiEyeOffLine /> : <RiEyeLine />}
+            </button>
+          </div>
         </div>
 
         {error && <div className={styles.errorMessage}>{error}</div>}
@@ -90,7 +121,7 @@ const Register = () => {
         </button>
 
         <div className={styles.registerLink}>
-          Уже есть аккаунт? <span onClick={() => navigate('/login')} style={{ cursor: 'pointer', color: '#007bff' }}>Войти</span>
+          Уже есть аккаунт? <a href="/login">Войти</a>
         </div>
       </form>
     </div>

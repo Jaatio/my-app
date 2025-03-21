@@ -1,0 +1,270 @@
+.historyContainer {
+  padding: 20px;
+}
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filterButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 8px;
+  font-size: 20px;
+  transition: color 0.2s;
+}
+
+.filterButton:hover {
+  color: #4285f4;
+}
+
+.filtersPanel {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filterGroup {
+  margin-bottom: 15px;
+}
+
+.filterGroup:last-child {
+  margin-bottom: 0;
+}
+
+.filterGroup label {
+  display: block;
+  margin-bottom: 5px;
+  color: #666;
+}
+
+.filterInput {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.filterSelect {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 200px;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.reportButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4285f4;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: color 0.2s;
+}
+
+.reportButton:hover {
+  color: #1967d2;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #dc3545;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: color 0.2s;
+}
+
+.deleteButton:hover {
+  color: #c82333;
+}
+
+.inventoriesList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.inventoryCard {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.inventoryCard:hover {
+  transform: translateY(-2px);
+}
+
+.inventoryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.inventoryHeader h3 {
+  margin: 0;
+  color: #333;
+}
+
+.inventoryDetails {
+  color: #666;
+}
+
+.inventoryDetails p {
+  margin: 5px 0;
+}
+
+.savedDate {
+  font-style: italic;
+  color: #888;
+}
+
+.discrepanciesSummary {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.noData {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  grid-column: 1 / -1;
+  padding: 20px;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 500px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modalContent h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modalButtons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.modalButtons button:first-child {
+  background-color: #4285f4;
+  color: white;
+}
+
+.modalButtons button:first-child:hover {
+  background-color: #1967d2;
+}
+
+.modalButtons button:last-child {
+  background-color: #f1f3f4;
+  color: #666;
+}
+
+.modalButtons button:last-child:hover {
+  background-color: #e8eaed;
+}
+
+.reportLinkContainer {
+  margin: 20px 0;
+}
+
+.reportLinkContainer p {
+  margin-bottom: 10px;
+  color: #666;
+  font-weight: 500;
+}
+
+.reportLink {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.reportLink a {
+  color: #4285f4;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reportLink a:hover {
+  text-decoration: underline;
+}
+
+.externalLinkIcon {
+  font-size: 14px;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.modalForm label {
+  display: block;
+  margin-bottom: 15px;
+}
+
+.modalForm label:last-child {
+  margin-bottom: 0;
+} 

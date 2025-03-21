@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { database } from "../firebase";
-import { ref, onValue, update, remove, push, set } from "firebase/database";
+import { ref, onValue, update, remove, push, set, get } from "firebase/database";
 import html2canvas from "html2canvas";
 import styles from "./AuditorPage.module.css";
 import ReportSection from '../components/ReportSection';
+import InventoryHistory from '../components/InventoryHistory';
 
 const AuditorPage = () => {
   const [activeTab, setActiveTab] = useState("tasks");
@@ -11,6 +12,10 @@ const AuditorPage = () => {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [selectedInventoryItems, setSelectedInventoryItems] = useState([]);
   const [products, setProducts] = useState([]);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [selectedInventoryForSave, setSelectedInventoryForSave] = useState(null);
+  const [responsiblePerson, setResponsiblePerson] = useState("");
+  const [reportLink, setReportLink] = useState("");
 
   // Подписка на данные из базы при монтировании компонента
   useEffect(() => {
@@ -110,10 +115,41 @@ const AuditorPage = () => {
     }
   };
 
+  // Добавляем функцию для получения следующего номера инвентаризации
+  const getNextInventoryNumber = async () => {
+    try {
+      // Получаем все активные инвентаризации
+      const inventoriesRef = ref(database, "inventories/");
+      const inventoriesSnapshot = await get(inventoriesRef);
+      const activeInventories = inventoriesSnapshot.val() || {};
+      
+      // Получаем все сохраненные инвентаризации
+      const savedInventoriesRef = ref(database, "savedInventories/");
+      const savedInventoriesSnapshot = await get(savedInventoriesRef);
+      const savedInventories = savedInventoriesSnapshot.val() || {};
+      
+      // Собираем все номера инвентаризаций
+      const allNumbers = [
+        ...Object.values(activeInventories).map(inv => inv.inventoryNumber || 0),
+        ...Object.values(savedInventories).map(inv => inv.inventoryNumber || 0)
+      ];
+      
+      // Находим максимальный номер
+      const maxNumber = Math.max(0, ...allNumbers);
+      
+      // Возвращаем следующий номер
+      return maxNumber + 1;
+    } catch (error) {
+      console.error("Ошибка при получении следующего номера инвентаризации:", error);
+      return inventoryItems.length + 1; // Fallback к старой логике
+    }
+  };
+
   // Создание новой инвентаризации
   const handleCreateInventory = async () => {
+    const nextNumber = await getNextInventoryNumber();
     const newInventory = {
-      inventoryNumber: inventoryItems.length + 1,
+      inventoryNumber: nextNumber,
       creationDateTime: new Date().toLocaleString(),
       status: "В процессе",
       scannedProducts: {},
@@ -280,16 +316,9 @@ const AuditorPage = () => {
             discrepancies.map((disc, index) => (
               <div key={index} className={styles.discrepancyItem}>
                 <div>Номенклатура: {disc.nomenclatureCode}</div>
-                <div>
-                  Сканировано: {disc.scannedQuantity}, Система: {disc.systemQuantity}
-                </div>
-                <div>
-                  Разница: {disc.difference > 0 ? "+" : ""}
-                  {disc.difference}
-                </div>
-                <div>
-                  Сумма расхождения: {disc.discrepancySum.toFixed(2)}
-                </div>
+                <div>Цена: {disc.price}</div>
+                <div>Количество: {disc.systemQuantity}</div>
+                <div>Сумма: {(disc.price * disc.systemQuantity).toFixed(2)}</div>
               </div>
             ))
           ) : (
@@ -320,6 +349,56 @@ const AuditorPage = () => {
         </div>
       </div>
     );
+  };
+
+  // Функция для сохранения инвентаризации
+  const handleSaveInventory = async (id) => {
+    setSelectedInventoryForSave(id);
+    setShowSaveModal(true);
+  };
+
+  // Функция для подтверждения сохранения инвентаризации
+  const handleConfirmSave = async () => {
+    if (!responsiblePerson.trim()) {
+      alert("Пожалуйста, введите ФИО ответственного исполнителя");
+      return;
+    }
+
+    if (!reportLink.trim()) {
+      alert("Пожалуйста, укажите ссылку на отчет");
+      return;
+    }
+
+    try {
+      const inventoryRef = ref(database, `inventories/${selectedInventoryForSave}`);
+      
+      // Получаем данные текущей инвентаризации
+      onValue(inventoryRef, async (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          // Создаем новую запись в сохраненных инвентаризациях
+          const savedInventoriesRef = ref(database, "savedInventories");
+          const newSavedInventory = {
+            ...data,
+            savedDate: new Date().toLocaleString(),
+            responsiblePerson: responsiblePerson,
+            reportLink: reportLink,
+            status: "Завершено"
+          };
+          
+          await push(savedInventoriesRef, newSavedInventory);
+          await remove(inventoryRef);
+        }
+      }, { onlyOnce: true });
+
+      setShowSaveModal(false);
+      setResponsiblePerson("");
+      setReportLink("");
+      setSelectedInventoryForSave(null);
+    } catch (error) {
+      console.error("Ошибка при сохранении инвентаризации:", error);
+      alert("Произошла ошибка при сохранении инвентаризации");
+    }
   };
 
   return (
@@ -473,14 +552,24 @@ const AuditorPage = () => {
                         {item.expanded ? "▾" : "▸"}
                       </button>
                       {item.status === "В процессе" && (
-                        <button
-                          onClick={() => handleCancelInventoryItem(item.id)}
-                        >
-                          Отменить
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleCancelInventoryItem(item.id)}
+                            className={styles.cancelButton}
+                          >
+                            Отменить
+                          </button>
+                          <button
+                            onClick={() => handleSaveInventory(item.id)}
+                            className={styles.saveButton}
+                          >
+                            Сохранить
+                          </button>
+                        </>
                       )}
                       <button
                         onClick={() => handleDeleteInventoryItem(item.id)}
+                        className={styles.deleteButton}
                       >
                         Удалить
                       </button>
@@ -498,14 +587,50 @@ const AuditorPage = () => {
           </div>
         )}
 
-        {activeTab === "inventoryHistory" && (
-          <div>
-            <p>История инвентаризации (будет реализовано позже).</p>
-          </div>
-        )}
+        {activeTab === "inventoryHistory" && <InventoryHistory />}
 
         {activeTab === "reports" && <ReportSection />}
       </div>
+
+      {/* Модальное окно для сохранения инвентаризации */}
+      {showSaveModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>Сохранение инвентаризации</h3>
+            <div className={styles.modalForm}>
+              <label>
+                ФИО ответственного исполнителя:
+                <input
+                  type="text"
+                  value={responsiblePerson}
+                  onChange={(e) => setResponsiblePerson(e.target.value)}
+                  placeholder="Введите ФИО"
+                  className={styles.modalInput}
+                />
+              </label>
+              <label>
+                Ссылка на отчет:
+                <input
+                  type="text"
+                  value={reportLink}
+                  onChange={(e) => setReportLink(e.target.value)}
+                  placeholder="Вставьте ссылку на отчет"
+                  className={styles.modalInput}
+                />
+              </label>
+            </div>
+            <div className={styles.modalButtons}>
+              <button onClick={handleConfirmSave}>Сохранить</button>
+              <button onClick={() => {
+                setShowSaveModal(false);
+                setResponsiblePerson("");
+                setReportLink("");
+                setSelectedInventoryForSave(null);
+              }}>Отмена</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
