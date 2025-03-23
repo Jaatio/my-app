@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { ref, onValue, update, push } from 'firebase/database';
 import { database } from '../firebase';
 import styles from './ShipmentSection.module.css';
+import { useAuth } from '../contexts/AuthContext';
 
 const ShipmentSection = () => {
+  const { currentUser } = useAuth();
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
     name: '',
@@ -12,6 +14,7 @@ const ShipmentSection = () => {
   });
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [shipQuantity, setShipQuantity] = useState('');
+  const [recipient, setRecipient] = useState('');
 
   // Загрузка товаров с нормализацией данных
   useEffect(() => {
@@ -47,14 +50,32 @@ const ShipmentSection = () => {
     return matchesName && matchesPrice && matchesQuantity;
   });
 
-  // Отправка товара
-  const handleSendProduct = async () => {
-    if (!selectedProduct || !shipQuantity) return;
+  // Выдача товара
+  const handleIssueProduct = async () => {
+    if (!selectedProduct || !shipQuantity || !recipient.trim()) {
+      alert('Пожалуйста, заполните все поля');
+      return;
+    }
 
     const newQuantity = selectedProduct.quantity - parseInt(shipQuantity);
-    if (newQuantity < 0) return alert('Недостаточно товара');
+    if (newQuantity < 0) {
+      alert('Недостаточно товара');
+      return;
+    }
 
     try {
+      const newShipment = {
+        productId: selectedProduct.id,
+        nomenclatureCode: selectedProduct.nomenclatureCode,
+        quantity: Number(shipQuantity),
+        price: selectedProduct.price,
+        total: selectedProduct.price * Number(shipQuantity),
+        date: new Date().toLocaleString(),
+        recipient: recipient,
+        issuedBy: currentUser.fullName,
+        userId: currentUser.uid
+      };
+
       // Обновление в Firebase и локальном состоянии
       await update(ref(database, `products/${selectedProduct.id}`), {
         quantity: newQuantity,
@@ -69,18 +90,14 @@ const ShipmentSection = () => {
       );
 
       // Запись в историю
-      push(ref(database, 'shipments'), {
-        productId: selectedProduct.id,
-        productName: selectedProduct.componentName,
-        shippedQuantity: shipQuantity,
-        price: selectedProduct.price,
-        date: new Date().toISOString()
-      });
+      push(ref(database, 'shipments'), newShipment);
 
       setSelectedProduct(null);
       setShipQuantity('');
+      setRecipient('');
     } catch (error) {
-      alert('Ошибка отправки: ' + error.message);
+      console.error("Ошибка при выдаче товара:", error);
+      alert("Произошла ошибка при выдаче товара");
     }
   };
 
@@ -96,7 +113,7 @@ const ShipmentSection = () => {
         />
         <input
           type="number"
-          placeholder="Макс. цена ($)"
+          placeholder="Макс. цена (₽)"
           value={filters.maxPrice}
           onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
         />
@@ -115,15 +132,15 @@ const ShipmentSection = () => {
             <h3>{product.componentName}</h3>
             <div className={styles.productInfo}>
               <p>Количество: {product.quantity} {product.unit}</p>
-              <p>Цена: ${product.price.toFixed(2)}</p>
+              <p>Цена: {product.price.toFixed(2)} ₽</p>
               <p>Местоположение: {product.location}</p>
             </div>
             {product.quantity > 0 ? (
               <button
-                className={styles.sendButton}
+                className={styles.issueButton}
                 onClick={() => setSelectedProduct(product)}
               >
-                Отправить
+                Выдать
               </button>
             ) : (
               <div className={styles.outOfStock}>Отсутствует</div>
@@ -132,11 +149,11 @@ const ShipmentSection = () => {
         ))}
       </div>
 
-      {/* Модальное окно отправки */}
+      {/* Модальное окно выдачи */}
       {selectedProduct && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <h3>Отправка: {selectedProduct.componentName}</h3>
+            <h3>Выдача: {selectedProduct.componentName}</h3>
             <div className={styles.modalBody}>
               <label>
                 Доступно: {selectedProduct.quantity} {selectedProduct.unit}
@@ -150,11 +167,27 @@ const ShipmentSection = () => {
                   max={selectedProduct.quantity}
                 />
               </label>
+              <label>
+                Получатель:
+                <input
+                  type="text"
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                  placeholder="Введите ФИО получателя"
+                  required
+                />
+              </label>
               <div className={styles.modalActions}>
-                <button onClick={() => setSelectedProduct(null)}>Отмена</button>
+                <button onClick={() => {
+                  setSelectedProduct(null);
+                  setShipQuantity('');
+                  setRecipient('');
+                }}>
+                  Отмена
+                </button>
                 <button
-                  onClick={handleSendProduct}
-                  disabled={!shipQuantity || shipQuantity < 1}
+                  onClick={handleIssueProduct}
+                  disabled={!shipQuantity || shipQuantity < 1 || !recipient.trim()}
                 >
                   Подтвердить
                 </button>

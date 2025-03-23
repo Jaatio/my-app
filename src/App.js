@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import ResetPassword from './components/ResetPassword';
@@ -8,10 +8,16 @@ import ManagerPage from './pages/ManagerPage';
 import WarehousePage from './pages/WarehousePage';
 import AuditorPage from './pages/AuditorPage';
 import AdminPage from './pages/AdminPage';
+import { AuthProvider } from './contexts/AuthContext';
+import UserProfile from './components/UserProfile';
 
-const App = () => {
+const AppContent = () => {
+  const location = useLocation();
+  const isAuthPage = ['/login', '/register', '/reset-password'].includes(location.pathname);
+
   return (
-    <Router>
+    <div className="app">
+      {!isAuthPage && <UserProfile />}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -23,7 +29,17 @@ const App = () => {
         <Route path="/warehouse" element={<WarehousePage />} />
         <Route path="/auditor" element={<AuditorPage />} />
       </Routes>
-    </Router>
+    </div>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
   );
 };
 

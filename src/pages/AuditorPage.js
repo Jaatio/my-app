@@ -5,8 +5,10 @@ import html2canvas from "html2canvas";
 import styles from "./AuditorPage.module.css";
 import ReportSection from '../components/ReportSection';
 import InventoryHistory from '../components/InventoryHistory';
+import { useAuth } from '../contexts/AuthContext';
 
 const AuditorPage = () => {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState("tasks");
   const [tasks, setTasks] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
@@ -359,11 +361,6 @@ const AuditorPage = () => {
 
   // Функция для подтверждения сохранения инвентаризации
   const handleConfirmSave = async () => {
-    if (!responsiblePerson.trim()) {
-      alert("Пожалуйста, введите ФИО ответственного исполнителя");
-      return;
-    }
-
     if (!reportLink.trim()) {
       alert("Пожалуйста, укажите ссылку на отчет");
       return;
@@ -372,18 +369,17 @@ const AuditorPage = () => {
     try {
       const inventoryRef = ref(database, `inventories/${selectedInventoryForSave}`);
       
-      // Получаем данные текущей инвентаризации
       onValue(inventoryRef, async (snapshot) => {
         const data = snapshot.val();
         if (data) {
-          // Создаем новую запись в сохраненных инвентаризациях
           const savedInventoriesRef = ref(database, "savedInventories");
           const newSavedInventory = {
             ...data,
             savedDate: new Date().toLocaleString(),
-            responsiblePerson: responsiblePerson,
+            responsiblePerson: currentUser.fullName,
             reportLink: reportLink,
-            status: "Завершено"
+            status: "Завершено",
+            userId: currentUser.uid
           };
           
           await push(savedInventoriesRef, newSavedInventory);
@@ -392,7 +388,6 @@ const AuditorPage = () => {
       }, { onlyOnce: true });
 
       setShowSaveModal(false);
-      setResponsiblePerson("");
       setReportLink("");
       setSelectedInventoryForSave(null);
     } catch (error) {
@@ -599,16 +594,6 @@ const AuditorPage = () => {
             <h3>Сохранение инвентаризации</h3>
             <div className={styles.modalForm}>
               <label>
-                ФИО ответственного исполнителя:
-                <input
-                  type="text"
-                  value={responsiblePerson}
-                  onChange={(e) => setResponsiblePerson(e.target.value)}
-                  placeholder="Введите ФИО"
-                  className={styles.modalInput}
-                />
-              </label>
-              <label>
                 Ссылка на отчет:
                 <input
                   type="text"
@@ -623,7 +608,6 @@ const AuditorPage = () => {
               <button onClick={handleConfirmSave}>Сохранить</button>
               <button onClick={() => {
                 setShowSaveModal(false);
-                setResponsiblePerson("");
                 setReportLink("");
                 setSelectedInventoryForSave(null);
               }}>Отмена</button>

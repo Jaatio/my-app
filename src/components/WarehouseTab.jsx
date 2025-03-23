@@ -179,11 +179,11 @@ const WarehouseTab = () => {
               </div>
               <div className={styles.infoRow}>
                 <span>Цена за ед.:</span>
-                <span>${product.price}</span>
+                <span>{product.price} ₽</span>
               </div>
               <div className={styles.infoRow}>
                 <span>Общая сумма:</span>
-                <span>${product.sum}</span>
+                <span>{product.sum} ₽</span>
               </div>
               <div className={styles.infoRow}>
                 <span>Место:</span>

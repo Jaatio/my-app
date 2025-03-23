@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, database } from '../firebase'; // Импортируем auth и database из firebase.js
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Импортируем метод для входа
-import { ref, onValue } from 'firebase/database'; // Импортируем методы для работы с базой данных
+import { ref, onValue, update } from 'firebase/database'; // Импортируем методы для работы с базой данных
 import { MdEmail } from 'react-icons/md';
 import { RiLockPasswordLine, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
 import styles from './Login.module.css';
@@ -24,6 +24,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
     try {
       // Вход через Firebase
@@ -31,20 +32,29 @@ const Login = () => {
       const user = userCredential.user;
 
       // Получаем данные пользователя из базы данных
-      const userRef = ref(database, `employees/`);
-      onValue(userRef, (snapshot) => {
+      const employeesRef = ref(database, 'employees');
+      onValue(employeesRef, async (snapshot) => {
         const data = snapshot.val();
         let userData = null;
 
-        // Ищем пользователя по UID
+        // Ищем пользователя по email или UID
         for (let id in data) {
-          if (data[id].uid === user.uid) {
+          if (data[id].email === email || data[id].uid === user.uid) {
             userData = data[id];
             break;
           }
         }
 
+        console.log('Найденные данные пользователя:', userData);
+
         if (userData) {
+          // Обновляем uid пользователя, если он изменился
+          if (userData.uid !== user.uid) {
+            await update(ref(database, `employees/${userData.id}`), {
+              uid: user.uid
+            });
+          }
+
           // Перенаправляем пользователя в зависимости от его роли
           switch (userData.role) {
             case 'admin':
@@ -63,12 +73,15 @@ const Login = () => {
               setError('У вас нет доступа к этой странице');
           }
         } else {
+          console.error('Пользователь не найден в базе данных');
           setError('Пользователь не найден в базе данных');
         }
+      }, {
+        onlyOnce: true
       });
     } catch (error) {
+      console.error('Ошибка входа:', error);
       setError('Неверный email или пароль');
-      console.error('Ошибка входа:', error.message);
     }
   };
 

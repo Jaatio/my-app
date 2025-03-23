@@ -76,8 +76,8 @@ const ShipmentHistory = () => {
             <h3>{shipment.productName}</h3>
             <div className={styles.shipmentDetails}>
               <p>Количество: {shipment.shippedQuantity}</p>
-              <p>Цена за единицу: ${shipment.price.toFixed(2)}</p>
-              <p>Общая сумма: ${shipment.total}</p>
+              <p>Цена за единицу: {shipment.price.toFixed(2)} ₽</p>
+              <p>Общая сумма: {shipment.total} ₽</p>
               <p>Дата отправки: {shipment.date}</p>
             </div>
           </div>

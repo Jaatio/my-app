@@ -6,6 +6,7 @@ import emailjs from '@emailjs/browser';
 import './AdminPage.css';
 import WarehouseTab from '../components/WarehouseTab'; // Import the new component
 import ReportsTab from '../components/ReportsTab';
+import WarehouseEditor from '../components/WarehouseEditor';
 
 
 const AdminPage = () => {
@@ -273,13 +274,17 @@ const AdminPage = () => {
             <button onClick={() => setActiveTab('ordersHistory')}>История заказов</button>
           </div>
         </div>
-        {/* New Warehouse Tab */}
-        <button
-          className={`tab-button ${activeTab === 'warehouse' ? 'active' : ''}`}
-          onClick={() => setActiveTab('warehouse')}
-        >
-          Склад
-        </button>
+        <div className="dropdown">
+          <button
+            className={`tab-button ${activeTab === 'warehouse' || activeTab === 'warehouseEditor' ? 'active' : ''}`}
+          >
+            Склад
+          </button>
+          <div className="dropdown-content">
+            <button onClick={() => setActiveTab('warehouse')}>Управление складом</button>
+            <button onClick={() => setActiveTab('warehouseEditor')}>Редактирование склада</button>
+          </div>
+        </div>
       </div>
 
       <button
@@ -539,8 +544,8 @@ const AdminPage = () => {
           </div>
         )}
 
-        {/* Render WarehouseTab when selected */}
         {activeTab === 'warehouse' && <WarehouseTab />}
+        {activeTab === 'warehouseEditor' && <WarehouseEditor />}
         {activeTab === 'viewReports' && <ReportsTab />}
       </div>
     </div>

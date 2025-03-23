@@ -43,7 +43,7 @@
     font-size: 14px;
   }
   
-  .sendButton {
+  .issueButton {
     width: 100%;
     padding: 12px;
     background: #2196F3;
@@ -52,6 +52,21 @@
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
+    margin-top: 15px;
+    transition: background-color 0.3s;
+  }
+  
+  .issueButton:hover {
+    background: #1976D2;
+  }
+  
+  .outOfStock {
+    width: 100%;
+    padding: 12px;
+    background: #f5f5f5;
+    color: #999;
+    text-align: center;
+    border-radius: 6px;
     margin-top: 15px;
   }
   
@@ -76,12 +91,37 @@
     max-width: 95%;
   }
   
+  .modalContent h3 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+  }
+  
+  .modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .modalBody label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #2c3e50;
+    font-weight: 500;
+  }
+  
   .modalBody input {
     width: 100%;
     padding: 10px;
-    margin: 10px 0;
     border: 1px solid #ddd;
     border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+  }
+  
+  .modalBody input:focus {
+    outline: none;
+    border-color: #2196F3;
   }
   
   .modalActions {
@@ -95,6 +135,18 @@
     padding: 10px 20px;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+  
+  .modalActions button:first-child {
+    background: #f5f5f5;
+    border: none;
+    color: #666;
+  }
+  
+  .modalActions button:first-child:hover {
+    background: #e0e0e0;
   }
   
   .modalActions button:last-child {
@@ -103,36 +155,11 @@
     border: none;
   }
   
-  .modalActions button:last-child:disabled {
-    background: #90caf9;
+  .modalActions button:last-child:hover {
+    background: #1976D2;
+  }
+  
+  .modalActions button:disabled {
+    background: #ccc;
     cursor: not-allowed;
   }
-  .outOfStock {
-  background: #cccccc;
-  color: #666666;
-  padding: 12px;
-  border-radius: 6px;
-  text-align: center;
-  cursor: not-allowed;
-}
-
-.sendButton:disabled {
-  background: #dddddd;
-  cursor: not-allowed;
-}
-
-/* Обновить существующие стили */
-.productInfo p {
-  margin: 10px 0;
-  font-size: 14px;
-  color: #444444;
-}
-
-.modalBody input {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  border: 2px solid #2196F3;
-  border-radius: 8px;
-  font-size: 16px;
-}

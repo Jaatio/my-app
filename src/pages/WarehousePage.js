@@ -11,6 +11,35 @@ import ShipmentSection from '../components/ShipmentSection';
 import ShipmentHistory from '../components/ShipmentHistory';
 import ReportSection from '../components/ReportSection';
 
+// Список единиц измерения для радиоэлектронных компонентов
+const UNITS = [
+  "шт.", // штуки
+  "м", // метры
+  "см", // сантиметры
+  "мм", // миллиметры
+  "кг", // килограммы
+  "г", // граммы
+  "мг", // миллиграммы
+  "л", // литры
+  "мл", // миллилитры
+  "В", // вольты
+  "мВ", // милливольты
+  "А", // амперы
+  "мА", // миллиамперы
+  "Ом", // омы
+  "кОм", // килоомы
+  "МОм", // мегаомы
+  "Гц", // герцы
+  "кГц", // килогерцы
+  "МГц", // мегагерцы
+  "Ф", // фарады
+  "мкФ", // микрофарады
+  "нФ", // нанофарады
+  "пФ", // пикофарады
+  "Гн", // генри
+  "мГн", // миллигенри
+  "мкГн", // микрогенри
+];
 
 const WarehousePage = () => {
   const [selectedOption, setSelectedOption] = useState("shipment");
@@ -19,21 +48,25 @@ const WarehousePage = () => {
     componentName: "",
     nomenclatureCode: "",
     manufacturer: "",
-    unit: "",
+    unit: UNITS[0],
     quantity: "",
     price: "",
     sum: "",
     arrivalDate: "",
-    location: "",
+    warehouseId: "",
+    sectionId: "",
   });
   const [qrData, setQrData] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
+  const [warehouses, setWarehouses] = useState({});
+  const [nextNomenclatureCode, setNextNomenclatureCode] = useState(1);
 
   const qrRef = useRef(null);
 
   // Загрузка данных из Firebase
   useEffect(() => {
+    // Загрузка продуктов
     const productsRef = ref(database, 'products');
     onValue(productsRef, (snapshot) => {
       const data = snapshot.val();
@@ -42,6 +75,27 @@ const WarehousePage = () => {
         ...data[key]
       })) : [];
       setProducts(loadedProducts);
+      
+      // Определение следующего кода номенклатуры на основе последней записи
+      if (loadedProducts.length > 0) {
+        // Сортируем продукты по коду номенклатуры в порядке убывания
+        const sortedProducts = [...loadedProducts].sort((a, b) => {
+          const aNum = parseInt(a.nomenclatureCode?.replace(/[^0-9]/g, '') || '0');
+          const bNum = parseInt(b.nomenclatureCode?.replace(/[^0-9]/g, '') || '0');
+          return bNum - aNum;
+        });
+        
+        // Берем код последней номенклатуры и увеличиваем на 1
+        const lastCode = parseInt(sortedProducts[0]?.nomenclatureCode?.replace(/[^0-9]/g, '') || '0');
+        setNextNomenclatureCode(lastCode + 1);
+      }
+    });
+
+    // Загрузка складов
+    const warehousesRef = ref(database, 'warehouses');
+    onValue(warehousesRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      setWarehouses(data);
     });
   }, []);
 
@@ -51,26 +105,76 @@ const WarehousePage = () => {
   const minDate = dates.length > 0 ? new Date(Math.min(...dates)).toLocaleDateString() : "Нет данных";
   const maxDate = dates.length > 0 ? new Date(Math.max(...dates)).toLocaleDateString() : "Нет данных";
 
-  // Обработчик изменения полей формы
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      
+      // Автоматический расчет суммы при изменении количества или цены
+      if (name === 'quantity' || name === 'price') {
+        const quantity = name === 'quantity' ? value : prev.quantity;
+        const price = name === 'price' ? value : prev.price;
+        newData.sum = (parseFloat(quantity) * parseFloat(price)).toFixed(2);
+      }
+      
+      return newData;
+    });
+  };
+
+  const handleWarehouseChange = (e) => {
+    const warehouseId = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      warehouseId,
+      sectionId: '', // Сброс выбранной секции при смене склада
+    }));
+  };
+
+  const handleSectionChange = (e) => {
+    const sectionId = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      sectionId,
+    }));
   };
 
   const handleCreate = (e) => {
     e.preventDefault();
-    setQrData(JSON.stringify(formData));
+    
+    // Формирование местоположения из выбранного склада и секции
+    const selectedWarehouse = warehouses[formData.warehouseId];
+    const selectedSection = selectedWarehouse?.sections?.[formData.sectionId];
+    const location = selectedWarehouse && selectedSection
+      ? `${selectedWarehouse.name} - ${selectedSection.name}`
+      : '';
+
+    const productData = {
+      ...formData,
+      nomenclatureCode: `N${String(nextNomenclatureCode).padStart(6, '0')}`,
+      location,
+    };
+
+    // Только генерируем QR-код без добавления в базу данных
+    setQrData(JSON.stringify(productData));
+    setIsModalOpen(true);
+
+    // Очищаем форму
     setFormData({
       componentName: "",
       nomenclatureCode: "",
       manufacturer: "",
-      unit: "",
+      unit: UNITS[0],
       quantity: "",
       price: "",
       sum: "",
       arrivalDate: "",
-      location: "",
+      warehouseId: "",
+      sectionId: "",
     });
+
+    // Увеличиваем счетчик для следующего кода номенклатуры
+    setNextNomenclatureCode(prev => prev + 1);
   };
 
   // Функция для сохранения QR-кода как PNG
@@ -149,8 +253,8 @@ const WarehousePage = () => {
           (product.manufacturer || "-").substring(0, 25),
           product.unit || "-",
           quantity.toLocaleString("ru-RU"),
-          `$${price.toFixed(2)}`,
-          `$${sum.toFixed(2)}`,
+          `${price.toFixed(2)} ₽`,
+          `${sum.toFixed(2)} ₽`,
           date ? date.toLocaleDateString("ru-RU") : "-",
           (product.location || "-").substring(0, 30)
         ];
@@ -317,8 +421,8 @@ const WarehousePage = () => {
       </div>
 
       {selectedOption === "generateQR" && (
-        <div className={styles.qrGeneration}>
-          {/* QR-код вверху */}
+        <div className={styles.qrSection}>
+          <h2>Генерация QR-кода</h2>
           {qrData && (
             <div className={styles.qrCode}>
               <div className={styles.qrContainer} onClick={toggleModal}>
@@ -334,37 +438,120 @@ const WarehousePage = () => {
               </button>
             </div>
           )}
-
-          {/* Заголовок над формой */}
-          <h2>Генерация QR-кода</h2>
-
-          {/* Форма ввода данных */}
           <form onSubmit={handleCreate} className={styles.qrForm}>
-            {Object.entries(formData).map(([key]) => (
-              <div key={key} className={styles.formField}>
-                <label>
-                  {{
-                    componentName: "Наименование компонента",
-                    nomenclatureCode: "Код номенклатуры",
-                    manufacturer: "Производитель",
-                    unit: "Единица измерения",
-                    quantity: "Количество",
-                    price: "Цена",
-                    sum: "Сумма",
-                    arrivalDate: "Дата поступления",
-                    location: "Местоположение"
-                  }[key]}
-                </label>
-                <input
-                  type={key.includes("Date") ? "date" : key === "quantity" || key === "price" || key === "sum" ? "number" : "text"}
-                  name={key}
-                  value={formData[key]}
-                  onChange={handleInputChange}
+            <div className={styles.formField}>
+              <label>Наименование компонента</label>
+              <input
+                type="text"
+                name="componentName"
+                value={formData.componentName}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className={styles.formField}>
+              <label>Код номенклатуры</label>
+              <input
+                type="text"
+                value={`N${String(nextNomenclatureCode).padStart(6, '0')}`}
+                disabled
+              />
+            </div>
+            <div className={styles.formField}>
+              <label>Производитель</label>
+              <input
+                type="text"
+                name="manufacturer"
+                value={formData.manufacturer}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className={styles.formField}>
+              <label>Единица измерения</label>
+              <select
+                name="unit"
+                value={formData.unit}
+                onChange={handleInputChange}
+                required
+              >
+                {UNITS.map(unit => (
+                  <option key={unit} value={unit}>{unit}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.formField}>
+              <label>Количество</label>
+              <input
+                type="number"
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div className={styles.formField}>
+              <label>Цена</label>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div className={styles.formField}>
+              <label>Сумма</label>
+              <input
+                type="number"
+                value={formData.sum}
+                disabled
+              />
+            </div>
+            <div className={styles.formField}>
+              <label>Дата поступления</label>
+              <input
+                type="date"
+                name="arrivalDate"
+                value={formData.arrivalDate}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className={styles.formField}>
+              <label>Склад</label>
+              <select
+                name="warehouseId"
+                value={formData.warehouseId}
+                onChange={handleWarehouseChange}
+                required
+              >
+                <option value="">Выберите склад</option>
+                {Object.entries(warehouses).map(([id, warehouse]) => (
+                  <option key={id} value={id}>{warehouse.name}</option>
+                ))}
+              </select>
+            </div>
+            {formData.warehouseId && (
+              <div className={styles.formField}>
+                <label>Секция</label>
+                <select
+                  name="sectionId"
+                  value={formData.sectionId}
+                  onChange={handleSectionChange}
                   required
-                  placeholder={key === "unit" ? "шт., кг, м и т.д." : ""}
-                />
+                >
+                  <option value="">Выберите секцию</option>
+                  {Object.entries(warehouses[formData.warehouseId].sections || {}).map(([id, section]) => (
+                    <option key={id} value={id}>{section.name}</option>
+                  ))}
+                </select>
               </div>
-            ))}
+            )}
             <div className={styles.formActions}>
               <button type="submit" className={styles.submitButton}>
                 Создать
@@ -398,7 +585,7 @@ const WarehousePage = () => {
           </div>
 
           <div className={styles.summary}>
-            <p>Общая сумма: <strong>${totalSum.toFixed(2)}</strong></p>
+            <p>Общая сумма: <strong>{totalSum.toFixed(2)} ₽</strong></p>
             <p>Диапазон дат: {minDate} — {maxDate}</p>
           </div>
 
@@ -429,8 +616,8 @@ const WarehousePage = () => {
                   <td>{product.manufacturer}</td>
                   <td>{product.unit}</td>
                   <td>{product.quantity}</td>
-                  <td>${product.price}</td>
-                  <td>${product.sum}</td>
+                  <td>{product.price} ₽</td>
+                  <td>{product.sum} ₽</td>
                   <td>{new Date(product.arrivalDate).toLocaleDateString()}</td>
                   <td>{product.location}</td>
                   <td>

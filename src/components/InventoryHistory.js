@@ -3,8 +3,10 @@ import { database } from '../firebase';
 import { ref, onValue, remove } from 'firebase/database';
 import { FaFilter, FaTrash, FaFileAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import styles from './InventoryHistory.module.css';
+import { useAuth } from '../contexts/AuthContext';
 
 const InventoryHistory = () => {
+  const { currentUser } = useAuth();
   const [savedInventories, setSavedInventories] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -25,16 +27,18 @@ const InventoryHistory = () => {
     onValue(savedInventoriesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const inventoriesList = Object.entries(data).map(([id, item]) => ({
-          id,
-          ...item
-        }));
+        const inventoriesList = Object.entries(data)
+          .map(([id, item]) => ({
+            id,
+            ...item
+          }))
+          .filter(inventory => inventory.userId === currentUser.uid);
         setSavedInventories(inventoriesList);
       } else {
         setSavedInventories([]);
       }
     });
-  }, []);
+  }, [currentUser]);
 
   // Функция для открытия модального окна с отчетом
   const handleShowReport = (inventory) => {
@@ -219,12 +223,21 @@ const InventoryHistory = () => {
                 <p className={styles.savedDate}>Сохранено: {inventory.savedDate}</p>
                 {inventory.discrepancies && Object.keys(inventory.discrepancies).length > 0 && (
                   <div className={styles.discrepanciesSummary}>
-                    <p>Итоговая сумма расхождений: {
-                      Object.values(inventory.discrepancies).reduce(
-                        (sum, disc) => sum + (disc.discrepancySum || 0),
-                        0
-                      ).toFixed(2)
-                    }</p>
+                    <p className={styles.discrepancyTitle}>Итог расхождений:</p>
+                    <div className={styles.discrepancyDetails}>
+                      <p>
+                        Количество: {Object.values(inventory.discrepancies).reduce(
+                          (sum, disc) => sum + Math.abs(disc.difference || 0),
+                          0
+                        )} ед.
+                      </p>
+                      <p>
+                        Сумма: {Object.values(inventory.discrepancies).reduce(
+                          (sum, disc) => sum + Math.abs(disc.discrepancySum || 0),
+                          0
+                        ).toFixed(2)} ₽
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
