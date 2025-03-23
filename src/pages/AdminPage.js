@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { database, auth } from '../firebase';
 import { ref, push, onValue, update, remove } from 'firebase/database';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, deleteUser, getAuth } from 'firebase/auth';
+import emailjs from '@emailjs/browser';
 import './AdminPage.css';
 import WarehouseTab from '../components/WarehouseTab'; // Import the new component
 import ReportsTab from '../components/ReportsTab';
@@ -74,19 +75,82 @@ const AdminPage = () => {
   // Existing handler functions remain unchanged
   const handleApproveRequest = async (request) => {
     try {
+      console.log('Начало обработки запроса:', request);
+      
+      // Проверяем наличие всех необходимых данных
+      if (!request.email || !request.password || !request.fullName) {
+        throw new Error('Отсутствуют необходимые данные для регистрации');
+      }
+
+      // Создаем нового пользователя в Firebase Authentication
+      console.log('Создание нового пользователя в Firebase Auth...');
       const userCredential = await createUserWithEmailAndPassword(auth, request.email, request.password);
       const user = userCredential.user;
+      console.log('Новый пользователь успешно создан в Firebase Auth:', user);
+      
       const employeeData = {
         email: request.email,
         fullName: request.fullName,
-        role: request.role,
+        role: request.role || 'auditor',
         uid: user.uid,
+        createdAt: new Date().toISOString()
       };
-      await push(ref(database, 'employees/'), employeeData);
-      await update(ref(database, `registrationRequests/${request.id}`), { status: 'approved' });
-      setRegistrationRequests((prev) => prev.filter((req) => req.id !== request.id));
+      
+      console.log('Подготовка данных для добавления в базу:', employeeData);
+      
+      // Добавляем данные в базу
+      const employeeRef = ref(database, 'employees/');
+      const newEmployeeRef = await push(employeeRef, employeeData);
+      console.log('Данные работника добавлены в базу с ID:', newEmployeeRef.key);
+      
+      // Удаляем запрос после успешной обработки
+      await remove(ref(database, `registrationRequests/${request.id}`));
+      console.log('Запрос удален после успешной обработки');
+      
+      // Отправляем email уведомление
+      try {
+        console.log('Подготовка к отправке email на адрес:', request.email);
+        
+        // Проверяем инициализацию EmailJS
+        if (!window.emailjs) {
+          throw new Error('EmailJS не инициализирован');
+        }
+
+        const templateParams = {
+          to_name: request.fullName,
+          to_email: request.email,
+          message: 'Ваша заявка на регистрацию была одобрена. Теперь вы можете войти в систему, используя свой email и пароль.'
+        };
+
+        console.log('Отправка email с параметрами:', templateParams);
+
+        // Повторная инициализация на случай, если предыдущая не сработала
+        window.emailjs.init("IMc3jXnlcYkRe7-NI");
+
+        const emailResult = await window.emailjs.send(
+          'service_p9brucq',
+          'template_zt7tnrm',
+          templateParams
+        );
+
+        console.log('Email успешно отправлен:', emailResult);
+        alert('Email уведомление успешно отправлено!');
+      } catch (emailError) {
+        console.error('Ошибка отправки email:', emailError);
+        alert('Ошибка отправки email: ' + emailError.message);
+      }
+      
+      // Обновляем список запросов
+      setRegistrationRequests((prev) => {
+        const updated = prev.filter((req) => req.id !== request.id);
+        console.log('Обновленный список запросов:', updated);
+        return updated;
+      });
+
+      alert('Пользователь успешно добавлен в систему!');
     } catch (error) {
-      console.error('Ошибка при создании пользователя:', error);
+      console.error('Ошибка при обработке запроса:', error);
+      alert(`Ошибка при создании пользователя: ${error.message}`);
     }
   };
 
