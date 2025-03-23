@@ -26,11 +26,20 @@ export function AuthProvider({ children }) {
             
             if (employeeId) {
               const employeeData = data[employeeId];
-              setCurrentUser({
+              const userData = {
                 ...user,
                 ...employeeData,
                 id: employeeId
-              });
+              };
+              
+              setCurrentUser(userData);
+
+              // Сохраняем данные сессии
+              sessionStorage.setItem('userSession', JSON.stringify({
+                email: user.email,
+                role: employeeData.role,
+                fullName: employeeData.fullName
+              }));
             } else {
               setCurrentUser({
                 ...user,
@@ -50,6 +59,12 @@ export function AuthProvider({ children }) {
           });
         }
       } else {
+        // Проверяем наличие сохраненной сессии
+        const savedSession = sessionStorage.getItem('userSession');
+        if (savedSession) {
+          // Если есть сохраненная сессия, но нет пользователя, очищаем сессию
+          sessionStorage.removeItem('userSession');
+        }
         setCurrentUser(null);
       }
       
@@ -61,7 +76,21 @@ export function AuthProvider({ children }) {
 
   const value = {
     currentUser,
-    loading
+    loading,
+    getTargetPage: (role) => {
+      switch (role) {
+        case 'admin':
+          return '/admin';
+        case 'manager':
+          return '/manager';
+        case 'warehouse':
+          return '/warehouse';
+        case 'auditor':
+          return '/auditor';
+        default:
+          return '/login';
+      }
+    }
   };
 
   return (

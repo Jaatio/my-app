@@ -6,6 +6,7 @@ import styles from "./AuditorPage.module.css";
 import ReportSection from '../components/ReportSection';
 import InventoryHistory from '../components/InventoryHistory';
 import { useAuth } from '../contexts/AuthContext';
+import ReportsTab from "../components/ReportsTab";
 
 const AuditorPage = () => {
   const { currentUser } = useAuth();
@@ -25,11 +26,17 @@ const AuditorPage = () => {
     const tasksRef = ref(database, "tasks/");
     onValue(tasksRef, (snapshot) => {
       const data = snapshot.val();
-      setTasks(
-        data
-          ? Object.entries(data).map(([id, item]) => ({ id, ...item }))
-          : []
-      );
+      if (data) {
+        const tasksArray = Object.entries(data)
+          .map(([id, task]) => ({
+            id,
+            ...task,
+          }))
+          .filter((task) => task.responsible === currentUser.fullName);
+        setTasks(tasksArray);
+      } else {
+        setTasks([]);
+      }
     });
 
     // Загрузка инвентаризаций
@@ -53,7 +60,7 @@ const AuditorPage = () => {
           : []
       );
     });
-  }, []);
+  }, [currentUser]);
 
   // Функция сохранения карточки на ПК
   const handleSaveCard = () => {
@@ -97,8 +104,7 @@ const AuditorPage = () => {
     try {
       await update(ref(database, "tasks/" + id), {
         status: "Принято",
-        responseDate: new Date().toLocaleDateString(),
-        responseTime: new Date().toLocaleTimeString(),
+        responseDate: new Date().toLocaleDateString()
       });
     } catch (error) {
       console.error("Ошибка при принятии задачи:", error);
@@ -109,8 +115,7 @@ const AuditorPage = () => {
     try {
       await update(ref(database, "tasks/" + id), {
         status: "Отклонено",
-        responseDate: new Date().toLocaleDateString(),
-        responseTime: new Date().toLocaleTimeString(),
+        responseDate: new Date().toLocaleDateString()
       });
     } catch (error) {
       console.error("Ошибка при отклонении задачи:", error);
@@ -428,11 +433,11 @@ const AuditorPage = () => {
           </div>
         </div>
         <button
-            className={`${styles.tabButton} ${activeTab === "reports" ? styles.activeTab : ""}`}
-            onClick={() => setActiveTab("reports")}
-          >
-            Отчеты
-          </button>
+          className={`${styles.tabButton} ${activeTab === "reports" ? styles.activeTab : ""}`}
+          onClick={() => setActiveTab("reports")}
+        >
+          Отчеты
+        </button>
       </div>
 
       {/* Содержимое выбранной вкладки */}
@@ -449,9 +454,9 @@ const AuditorPage = () => {
                     <th>Задача</th>
                     <th>Тема</th>
                     <th>Исполнитель</th>
+                    <th>Создал</th>
                     <th>Состояние</th>
                     <th>Дата отклика</th>
-                    <th>Время отклика</th>
                     <th>Действия</th>
                   </tr>
                 </thead>
@@ -463,9 +468,9 @@ const AuditorPage = () => {
                       <td>{task.task}</td>
                       <td>{task.subject}</td>
                       <td>{task.responsible}</td>
+                      <td>{task.createdBy || "—"}</td>
                       <td>{task.status}</td>
                       <td>{task.responseDate || "—"}</td>
-                      <td>{task.responseTime || "—"}</td>
                       <td>
                         {task.status === "В ожидании" && (
                           <>
@@ -584,7 +589,7 @@ const AuditorPage = () => {
 
         {activeTab === "inventoryHistory" && <InventoryHistory />}
 
-        {activeTab === "reports" && <ReportSection />}
+        {activeTab === "reports" && <ReportsTab />}
       </div>
 
       {/* Модальное окно для сохранения инвентаризации */}

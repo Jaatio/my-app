@@ -4,15 +4,18 @@ import { ref, push, onValue, update, remove } from 'firebase/database';
 import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail, deleteUser, getAuth } from 'firebase/auth';
 import emailjs from '@emailjs/browser';
 import './AdminPage.css';
-import WarehouseTab from '../components/WarehouseTab'; // Import the new component
+import WarehouseTab from '../components/WarehouseTab';
 import ReportsTab from '../components/ReportsTab';
 import WarehouseEditor from '../components/WarehouseEditor';
-
+import InventoryHistory from '../components/InventoryHistory';
+import { useAuth } from '../contexts/AuthContext';
 
 const AdminPage = () => {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('registrationRequests');
   const [registrationRequests, setRegistrationRequests] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [auditors, setAuditors] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [newSupplier, setNewSupplier] = useState({
@@ -21,6 +24,7 @@ const AdminPage = () => {
     url: '',
     note: '',
   });
+  const [adminName, setAdminName] = useState('');
 
   // Existing useEffect hooks remain unchanged
   useEffect(() => {
@@ -72,6 +76,28 @@ const AdminPage = () => {
       setSuppliers(suppliersArray);
     });
   }, []);
+
+  // Добавляем новый useEffect для получения имени текущего администратора
+  useEffect(() => {
+    if (currentUser) {
+      const employeesRef = ref(database, 'employees');
+      onValue(employeesRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const admin = Object.values(data).find(emp => emp.uid === currentUser.uid);
+          if (admin) {
+            setAdminName(admin.fullName);
+          }
+        }
+      });
+    }
+  }, [currentUser]);
+
+  // Добавляем новый useEffect для фильтрации аудиторов
+  useEffect(() => {
+    const filteredAuditors = employees.filter(employee => employee.role === 'auditor');
+    setAuditors(filteredAuditors);
+  }, [employees]);
 
   // Existing handler functions remain unchanged
   const handleApproveRequest = async (request) => {
@@ -182,6 +208,9 @@ const AdminPage = () => {
       subject: formData.get('subject'),
       responsible: formData.get('responsible'),
       status: formData.get('status') || 'В ожидании',
+      createdBy: adminName,
+      createdAt: new Date().toISOString(),
+      createdByUid: currentUser.uid
     };
     try {
       await push(ref(database, 'tasks/'), newTask);
@@ -263,6 +292,18 @@ const AdminPage = () => {
         >
           Создание задачи
         </button>
+        <button
+          className={`tab-button ${activeTab === 'viewReports' ? 'active' : ''}`}
+          onClick={() => setActiveTab('viewReports')}
+        >
+          Просмотр отчетов
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'auditHistory' ? 'active' : ''}`}
+          onClick={() => setActiveTab('auditHistory')}
+        >
+          История аудитов
+        </button>
         <div className="dropdown">
           <button
             className={`tab-button ${activeTab === 'suppliers' || activeTab === 'ordersHistory' ? 'active' : ''}`}
@@ -286,13 +327,6 @@ const AdminPage = () => {
           </div>
         </div>
       </div>
-
-      <button
-        className={`tab-button ${activeTab === 'viewReports' ? 'active' : ''}`}
-        onClick={() => setActiveTab('viewReports')}
-      >
-        Просмотр отчетов
-      </button>
 
       {/* Tab Content */}
       <div className="tab-content">
@@ -396,7 +430,14 @@ const AdminPage = () => {
                       />
                     </td>
                     <td>
-                      <input type="text" name="responsible" placeholder="Исполнитель" required />
+                      <select name="responsible" required className="auditor-select">
+                        <option value="">Выберите аудитора</option>
+                        {auditors.map(auditor => (
+                          <option key={auditor.id} value={auditor.fullName}>
+                            {auditor.fullName}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td>
                       <select name="status" required>
@@ -422,6 +463,7 @@ const AdminPage = () => {
                     <th>Задача</th>
                     <th>Тема</th>
                     <th>Исполнитель</th>
+                    <th>Создал</th>
                     <th>Состояние</th>
                     <th>Действия</th>
                   </tr>
@@ -434,6 +476,7 @@ const AdminPage = () => {
                       <td>{task.task}</td>
                       <td>{task.subject}</td>
                       <td>{task.responsible}</td>
+                      <td>{task.createdBy}</td>
                       <td>{task.status}</td>
                       <td>
                         <button onClick={() => handleCancel(task.id)}>Отменить</button>
@@ -547,6 +590,7 @@ const AdminPage = () => {
         {activeTab === 'warehouse' && <WarehouseTab />}
         {activeTab === 'warehouseEditor' && <WarehouseEditor />}
         {activeTab === 'viewReports' && <ReportsTab />}
+        {activeTab === 'auditHistory' && <InventoryHistory isAdmin={true} />}
       </div>
     </div>
   );

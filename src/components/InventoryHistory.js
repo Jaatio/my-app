@@ -5,7 +5,7 @@ import { FaFilter, FaTrash, FaFileAlt, FaExternalLinkAlt } from 'react-icons/fa'
 import styles from './InventoryHistory.module.css';
 import { useAuth } from '../contexts/AuthContext';
 
-const InventoryHistory = () => {
+const InventoryHistory = ({ isAdmin = false }) => {
   const { currentUser } = useAuth();
   const [savedInventories, setSavedInventories] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -14,7 +14,8 @@ const InventoryHistory = () => {
     dateTo: '',
     responsiblePerson: '',
     discrepancyRange: 'all',
-    inventoryNumber: ''
+    inventoryNumber: '',
+    auditorName: ''
   });
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
@@ -32,13 +33,14 @@ const InventoryHistory = () => {
             id,
             ...item
           }))
-          .filter(inventory => inventory.userId === currentUser.uid);
+          // Если администратор - показываем все инвентаризации, если нет - только свои
+          .filter(inventory => isAdmin ? true : inventory.userId === currentUser.uid);
         setSavedInventories(inventoriesList);
       } else {
         setSavedInventories([]);
       }
     });
-  }, [currentUser]);
+  }, [currentUser, isAdmin]);
 
   // Функция для открытия модального окна с отчетом
   const handleShowReport = (inventory) => {
@@ -64,29 +66,28 @@ const InventoryHistory = () => {
     }
   };
 
-  // Функция для применения фильтров
+  // Функция для фильтрации инвентаризаций
   const getFilteredInventories = () => {
     return savedInventories.filter(inventory => {
+      // Фильтр по дате
+      if (filters.dateFrom && new Date(inventory.savedDate) < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo && new Date(inventory.savedDate) > new Date(filters.dateTo)) return false;
+
+      // Фильтр по ответственному лицу
+      if (filters.responsiblePerson && 
+          !inventory.responsiblePerson.toLowerCase().includes(filters.responsiblePerson.toLowerCase())) {
+        return false;
+      }
+
       // Фильтр по номеру инвентаризации
       if (filters.inventoryNumber && 
           !inventory.inventoryNumber.toString().includes(filters.inventoryNumber)) {
         return false;
       }
 
-      // Фильтр по дате
-      if (filters.dateFrom || filters.dateTo) {
-        const inventoryDate = new Date(inventory.savedDate);
-        if (filters.dateFrom && new Date(filters.dateFrom) > inventoryDate) {
-          return false;
-        }
-        if (filters.dateTo && new Date(filters.dateTo) < inventoryDate) {
-          return false;
-        }
-      }
-
-      // Фильтр по ответственному лицу
-      if (filters.responsiblePerson && 
-          !inventory.responsiblePerson.toLowerCase().includes(filters.responsiblePerson.toLowerCase())) {
+      // Фильтр по аудитору (только для администратора)
+      if (isAdmin && filters.auditorName && 
+          !inventory.auditorName?.toLowerCase().includes(filters.auditorName.toLowerCase())) {
         return false;
       }
 
@@ -116,12 +117,10 @@ const InventoryHistory = () => {
     }));
   };
 
-  const filteredInventories = getFilteredInventories();
-
   return (
     <div className={styles.historyContainer}>
       <div className={styles.headerContainer}>
-        <h2>История инвентаризаций</h2>
+        <h2>{isAdmin ? 'История всех аудитов' : 'История инвентаризаций'}</h2>
         <button 
           className={styles.filterButton}
           onClick={() => setShowFilters(!showFilters)}
@@ -164,6 +163,21 @@ const InventoryHistory = () => {
             </label>
           </div>
 
+          {isAdmin && (
+            <div className={styles.filterGroup}>
+              <label>
+                Аудитор:
+                <input
+                  type="text"
+                  value={filters.auditorName}
+                  onChange={(e) => handleFilterChange('auditorName', e.target.value)}
+                  placeholder="Введите ФИО аудитора"
+                  className={styles.filterInput}
+                />
+              </label>
+            </div>
+          )}
+
           <div className={styles.filterGroup}>
             <label>
               Номер инвентаризации:
@@ -195,8 +209,8 @@ const InventoryHistory = () => {
       )}
 
       <div className={styles.inventoriesList}>
-        {filteredInventories.length > 0 ? (
-          filteredInventories.map(inventory => (
+        {getFilteredInventories().length > 0 ? (
+          getFilteredInventories().map(inventory => (
             <div key={inventory.id} className={styles.inventoryCard}>
               <div className={styles.inventoryHeader}>
                 <h3>Инвентаризация №{inventory.inventoryNumber}</h3>
@@ -208,17 +222,20 @@ const InventoryHistory = () => {
                   >
                     <FaFileAlt />
                   </button>
-                  <button
-                    className={styles.deleteButton}
-                    onClick={() => handleDelete(inventory.id)}
-                    title="Удалить"
-                  >
-                    <FaTrash />
-                  </button>
+                  {!isAdmin && (
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => handleDelete(inventory.id)}
+                      title="Удалить"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
                 </div>
               </div>
               <div className={styles.inventoryDetails}>
                 <p>Ответственное лицо: {inventory.responsiblePerson}</p>
+                {isAdmin && <p>Аудитор: {inventory.auditorName}</p>}
                 <p>Статус: {inventory.status}</p>
                 <p className={styles.savedDate}>Сохранено: {inventory.savedDate}</p>
                 {inventory.discrepancies && Object.keys(inventory.discrepancies).length > 0 && (

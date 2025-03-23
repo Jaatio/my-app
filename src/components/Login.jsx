@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, database } from '../firebase'; // Импортируем auth и database из firebase.js
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Импортируем метод для входа
-import { ref, onValue, update } from 'firebase/database'; // Импортируем методы для работы с базой данных
+import { ref, get } from 'firebase/database'; // Импортируем методы для работы с базой данных
 import { MdEmail } from 'react-icons/md';
 import { RiLockPasswordLine, RiEyeLine, RiEyeOffLine } from 'react-icons/ri';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './Login.module.css';
 
 const Login = () => {
@@ -14,73 +15,49 @@ const Login = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { getTargetPage } = useAuth();
 
   useEffect(() => {
     document.body.classList.add('auth-page');
+    
+    // Проверяем наличие сохраненной сессии
+    const savedSession = sessionStorage.getItem('userSession');
+    if (savedSession) {
+      const { role } = JSON.parse(savedSession);
+      navigate(getTargetPage(role));
+    }
+
     return () => {
       document.body.classList.remove('auth-page');
     };
-  }, []);
+  }, [navigate, getTargetPage]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      // Вход через Firebase
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Получаем данные пользователя из базы данных
       const employeesRef = ref(database, 'employees');
-      onValue(employeesRef, async (snapshot) => {
-        const data = snapshot.val();
-        let userData = null;
-
-        // Ищем пользователя по email или UID
-        for (let id in data) {
-          if (data[id].email === email || data[id].uid === user.uid) {
-            userData = data[id];
-            break;
-          }
-        }
-
-        console.log('Найденные данные пользователя:', userData);
-
-        if (userData) {
-          // Обновляем uid пользователя, если он изменился
-          if (userData.uid !== user.uid) {
-            await update(ref(database, `employees/${userData.id}`), {
-              uid: user.uid
-            });
-          }
-
-          // Перенаправляем пользователя в зависимости от его роли
-          switch (userData.role) {
-            case 'admin':
-              navigate('/admin');
-              break;
-            case 'manager':
-              navigate('/manager');
-              break;
-            case 'warehouse':
-              navigate('/warehouse');
-              break;
-            case 'auditor':
-              navigate('/auditor');
-              break;
-            default:
-              setError('У вас нет доступа к этой странице');
-          }
+      const snapshot = await get(employeesRef);
+      const data = snapshot.val();
+      
+      if (data) {
+        const employeeData = Object.values(data).find(emp => emp.email === email);
+        
+        if (employeeData) {
+          // Перенаправляем пользователя на соответствующую страницу
+          navigate(getTargetPage(employeeData.role));
         } else {
-          console.error('Пользователь не найден в базе данных');
           setError('Пользователь не найден в базе данных');
         }
-      }, {
-        onlyOnce: true
-      });
+      } else {
+        setError('Ошибка получения данных');
+      }
     } catch (error) {
-      console.error('Ошибка входа:', error);
       setError('Неверный email или пароль');
     }
   };
