@@ -10,6 +10,7 @@ import styles from "./WarehousePage.module.css";
 import ShipmentSection from '../components/ShipmentSection';
 import ShipmentHistory from '../components/ShipmentHistory';
 import ReportSection from '../components/ReportSection';
+import AppDownloadDrawer from '../components/AppDownloadDrawer/AppDownloadDrawer';
 
 // Список единиц измерения для радиоэлектронных компонентов
 const UNITS = [
@@ -68,12 +69,16 @@ const WarehousePage = () => {
   useEffect(() => {
     // Загрузка продуктов
     const productsRef = ref(database, 'products');
-    onValue(productsRef, (snapshot) => {
+    const unsubscribe = onValue(productsRef, (snapshot) => {
       const data = snapshot.val();
-      const loadedProducts = data ? Object.keys(data).map(key => ({
+      if (data === null) {
+        setProducts([]); // Если данных нет, устанавливаем пустой массив
+        return;
+      }
+      const loadedProducts = Object.keys(data).map(key => ({
         id: key,
         ...data[key]
-      })) : [];
+      }));
       setProducts(loadedProducts);
       
       // Определение следующего кода номенклатуры на основе последней записи
@@ -93,10 +98,16 @@ const WarehousePage = () => {
 
     // Загрузка складов
     const warehousesRef = ref(database, 'warehouses');
-    onValue(warehousesRef, (snapshot) => {
+    const unsubscribeWarehouses = onValue(warehousesRef, (snapshot) => {
       const data = snapshot.val() || {};
       setWarehouses(data);
     });
+
+    // Отписываемся от слушателей при размонтировании компонента
+    return () => {
+      unsubscribe();
+      unsubscribeWarehouses();
+    };
   }, []);
 
   // Подсчет общей суммы и диапазона дат
@@ -202,9 +213,35 @@ const WarehousePage = () => {
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   // Удаление продукта
-  const handleDelete = (productId) => {
-    if (window.confirm("Вы уверены, что хотите удалить этот товар?")) {
-      remove(ref(database, `products/${productId}`));
+  const handleDelete = async (productId) => {
+    if (!window.confirm("Вы уверены, что хотите удалить этот товар?")) {
+      return;
+    }
+
+    try {
+      const productRef = ref(database, `products/${productId}`);
+      await remove(productRef);
+      
+      // Обновляем локальное состояние без перезагрузки всех данных
+      setProducts(prevProducts => {
+        const updatedProducts = prevProducts.filter(product => product.id !== productId);
+        
+        // Обновляем номер следующей номенклатуры если нужно
+        if (updatedProducts.length > 0) {
+          const sortedProducts = [...updatedProducts].sort((a, b) => {
+            const aNum = parseInt(a.nomenclatureCode?.replace(/[^0-9]/g, '') || '0');
+            const bNum = parseInt(b.nomenclatureCode?.replace(/[^0-9]/g, '') || '0');
+            return bNum - aNum;
+          });
+          const lastCode = parseInt(sortedProducts[0]?.nomenclatureCode?.replace(/[^0-9]/g, '') || '0');
+          setNextNomenclatureCode(lastCode + 1);
+        }
+        
+        return updatedProducts;
+      });
+    } catch (error) {
+      console.error("Ошибка при удалении товара:", error);
+      alert("Произошла ошибка при удалении товара");
     }
   };
 
@@ -363,7 +400,7 @@ const WarehousePage = () => {
   };
 
   return (
-    <div className={styles.warehousePage}>
+    <div className={styles.container}>
       <div className={styles.centralLine}>
         <div
           className={styles.dropdownContainer}
@@ -649,6 +686,7 @@ const WarehousePage = () => {
           </div>
         </div>
       )}
+      <AppDownloadDrawer />
     </div>
   );
 };

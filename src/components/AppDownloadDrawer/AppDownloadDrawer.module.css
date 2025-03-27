@@ -1,0 +1,66 @@
+.drawer {
+  position: fixed;
+  left: 0;
+  bottom: 20%;
+  z-index: 1000;
+}
+
+.content {
+  background: #1a1a1a;
+  color: white;
+  padding: 12px;
+  border-radius: 0 8px 8px 0;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.iconContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+}
+
+.phoneIcon {
+  font-size: 24px !important;
+  color: white;
+}
+
+.text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.expanded {
+  padding: 20px;
+  width: 200px;
+}
+
+.qrContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.qrCode {
+  width: 160px;
+  height: 160px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.instruction {
+  font-size: 12px;
+  text-align: center;
+  color: #888;
+} 

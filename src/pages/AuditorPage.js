@@ -7,6 +7,7 @@ import ReportSection from '../components/ReportSection';
 import InventoryHistory from '../components/InventoryHistory';
 import { useAuth } from '../contexts/AuthContext';
 import ReportsTab from "../components/ReportsTab";
+import AppDownloadDrawer from '../components/AppDownloadDrawer/AppDownloadDrawer';
 
 const AuditorPage = () => {
   const { currentUser } = useAuth();
@@ -22,6 +23,8 @@ const AuditorPage = () => {
 
   // Подписка на данные из базы при монтировании компонента
   useEffect(() => {
+    if (!currentUser) return;
+
     // Загрузка задач
     const tasksRef = ref(database, "tasks/");
     onValue(tasksRef, (snapshot) => {
@@ -32,7 +35,7 @@ const AuditorPage = () => {
             id,
             ...task,
           }))
-          .filter((task) => task.responsible === currentUser.fullName);
+          .filter((task) => task.responsible === currentUser?.fullName);
         setTasks(tasksArray);
       } else {
         setTasks([]);
@@ -366,6 +369,7 @@ const AuditorPage = () => {
 
   // Функция для подтверждения сохранения инвентаризации
   const handleConfirmSave = async () => {
+    if (!currentUser) return;
     if (!reportLink.trim()) {
       alert("Пожалуйста, укажите ссылку на отчет");
       return;
@@ -381,10 +385,10 @@ const AuditorPage = () => {
           const newSavedInventory = {
             ...data,
             savedDate: new Date().toLocaleString(),
-            responsiblePerson: currentUser.fullName,
+            responsiblePerson: currentUser?.fullName,
             reportLink: reportLink,
             status: "Завершено",
-            userId: currentUser.uid
+            userId: currentUser?.uid
           };
           
           await push(savedInventoriesRef, newSavedInventory);
@@ -620,6 +624,7 @@ const AuditorPage = () => {
           </div>
         </div>
       )}
+      <AppDownloadDrawer />
     </div>
   );
 };

@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.example.mapp",
+    "sha256_cert_fingerprints": ["C8:E6:82:63:50:9F:50:21:8A:78:AF:9B:FA:FF:71:3F:7D:40:F9:33:C6:44:36:D4:64:D6:7B:BB:EF:70:16:4A"]
+  }
+}] 
