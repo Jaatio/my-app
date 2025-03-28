@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ref, onValue, update, push } from 'firebase/database';
+import { ref, onValue, update, push, remove } from 'firebase/database';
 import { database } from '../firebase';
 import styles from './ShipmentSection.module.css';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,6 +29,7 @@ const ShipmentSection = () => {
             quantity: parseInt(data[key].quantity) || 0,
             unit: data[key].unit || 'шт.',
             location: data[key].location || 'Не указано',
+            nomenclatureCode: data[key].nomenclatureCode || `N${String(key).padStart(6, '0')}`,
           }))
         : [];
       setProducts(loadedProducts);
@@ -64,39 +65,62 @@ const ShipmentSection = () => {
     }
 
     try {
+      // Проверяем наличие всех необходимых полей
+      if (!selectedProduct.nomenclatureCode) {
+        console.error('Отсутствует код номенклатуры:', selectedProduct);
+        alert('Ошибка: отсутствует код номенклатуры');
+        return;
+      }
+
       const newShipment = {
         productId: selectedProduct.id,
+        componentName: selectedProduct.componentName,
         nomenclatureCode: selectedProduct.nomenclatureCode,
         quantity: Number(shipQuantity),
         price: selectedProduct.price,
         total: selectedProduct.price * Number(shipQuantity),
-        date: new Date().toLocaleString(),
+        date: new Date().toISOString(),
         recipient: recipient,
         issuedBy: currentUser.fullName,
         userId: currentUser.uid
       };
 
-      // Обновление в Firebase и локальном состоянии
-      await update(ref(database, `products/${selectedProduct.id}`), {
-        quantity: newQuantity,
-      });
-
-      setProducts(prevProducts =>
-        prevProducts.map(product =>
-          product.id === selectedProduct.id
-            ? { ...product, quantity: newQuantity }
-            : product
-        )
-      );
+      // Проверяем данные перед отправкой
+      console.log('Отправляемые данные:', newShipment);
 
       // Запись в историю
-      push(ref(database, 'shipments'), newShipment);
+      await push(ref(database, 'shipments'), newShipment);
+
+      if (newQuantity === 0) {
+        // Если товар полностью выдан, удаляем его из базы данных
+        await remove(ref(database, `products/${selectedProduct.id}`));
+        
+        // Обновляем локальное состояние
+        setProducts(prevProducts =>
+          prevProducts.filter(product => product.id !== selectedProduct.id)
+        );
+      } else {
+        // Обновляем количество в базе данных
+        await update(ref(database, `products/${selectedProduct.id}`), {
+          quantity: newQuantity,
+        });
+
+        // Обновляем локальное состояние
+        setProducts(prevProducts =>
+          prevProducts.map(product =>
+            product.id === selectedProduct.id
+              ? { ...product, quantity: newQuantity }
+              : product
+          )
+        );
+      }
 
       setSelectedProduct(null);
       setShipQuantity('');
       setRecipient('');
     } catch (error) {
       console.error("Ошибка при выдаче товара:", error);
+      console.error("Данные товара:", selectedProduct);
       alert("Произошла ошибка при выдаче товара");
     }
   };
@@ -128,9 +152,10 @@ const ShipmentSection = () => {
       {/* Список товаров */}
       <div className={styles.productGrid}>
         {filteredProducts.map(product => (
-          <div key={product.id} className={styles.productCard}>
+          <div key={`${product.id}-${product.nomenclatureCode}`} className={styles.productCard}>
             <h3>{product.componentName}</h3>
             <div className={styles.productInfo}>
+              <p>Код номенклатуры: {product.nomenclatureCode}</p>
               <p>Количество: {product.quantity} {product.unit}</p>
               <p>Цена: {product.price.toFixed(2)} ₽</p>
               <p>Местоположение: {product.location}</p>

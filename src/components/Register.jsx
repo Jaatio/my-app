@@ -14,6 +14,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,8 +24,35 @@ const Register = () => {
     };
   }, []);
 
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!email) {
+      errors.email = 'Пожалуйста, введите email';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = 'Пожалуйста, введите корректный email';
+    }
+
+    if (!fullName) {
+      errors.fullName = 'Пожалуйста, введите ваше ФИО';
+    }
+
+    if (!password) {
+      errors.password = 'Пожалуйста, введите пароль';
+    } else if (password.length < 7) {
+      errors.password = 'Пароль должен содержать минимум 7 символов';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       // Отправляем запрос на регистрацию в базу данных
@@ -61,9 +89,12 @@ const Register = () => {
               placeholder="Введите вашу электронную почту"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={styles.input}
+              className={`${styles.input} ${validationErrors.email ? styles.inputError : ''}`}
             />
           </div>
+          {validationErrors.email && (
+            <div className={styles.errorMessage}>{validationErrors.email}</div>
+          )}
         </div>
 
         <div className={styles.inputGroup}>
@@ -74,9 +105,12 @@ const Register = () => {
               placeholder="Введите ваше ФИО"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className={styles.input}
+              className={`${styles.input} ${validationErrors.fullName ? styles.inputError : ''}`}
             />
           </div>
+          {validationErrors.fullName && (
+            <div className={styles.errorMessage}>{validationErrors.fullName}</div>
+          )}
         </div>
 
         <div className={styles.inputGroup}>
@@ -102,7 +136,7 @@ const Register = () => {
               placeholder="Введите ваш пароль"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
+              className={`${styles.input} ${validationErrors.password ? styles.inputError : ''}`}
             />
             <button
               type="button"
@@ -112,6 +146,9 @@ const Register = () => {
               {showPassword ? <RiEyeOffLine /> : <RiEyeLine />}
             </button>
           </div>
+          {validationErrors.password && (
+            <div className={styles.errorMessage}>{validationErrors.password}</div>
+          )}
         </div>
 
         {error && <div className={styles.errorMessage}>{error}</div>}

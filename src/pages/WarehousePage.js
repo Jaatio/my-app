@@ -433,15 +433,15 @@ const WarehousePage = () => {
                 }`}
                 onClick={() => setSelectedOption("shipment")}
               >
-                Отправка товара
+                Выдача товара
               </button>
               <button
                 className={`${styles.dropdownButton} ${
                   selectedOption === "shipmentHistory" ? styles.active : ""
                 }`}
-                onClick={() => setSelectedOption("shipmentHistory")} // Только изменение состояния
+                onClick={() => setSelectedOption("shipmentHistory")}
               >
-                История отправок
+                История выдачи
               </button>
               <button
                 className={`${styles.dropdownButton} ${

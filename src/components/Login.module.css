@@ -177,9 +177,10 @@ select.input:focus {
 
 .errorMessage {
   color: #ff4444;
-  text-align: center;
-  font-size: 14px;
-  margin-top: -10px;
+  font-size: 12px;
+  margin-top: 4px;
+  text-align: left;
+  padding-left: 12px;
 }
 
 .successMessage {
@@ -190,4 +191,8 @@ select.input:focus {
   padding: 15px;
   border-radius: 8px;
   margin: 20px 0;
+}
+
+.inputError {
+  border-color: #ff4444 !important;
 }
