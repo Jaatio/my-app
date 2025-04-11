@@ -174,6 +174,10 @@ const WarehouseTab = () => {
                 <span>{product.nomenclatureCode}</span>
               </div>
               <div className={styles.infoRow}>
+                <span>Тип:</span>
+                <span>{product.componentType}</span>
+              </div>
+              <div className={styles.infoRow}>
                 <span>Производитель:</span>
                 <span>{product.manufacturer}</span>
               </div>

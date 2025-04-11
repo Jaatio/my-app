@@ -8,6 +8,7 @@ import WarehouseTab from '../components/WarehouseTab';
 import ReportsTab from '../components/ReportsTab';
 import WarehouseEditor from '../components/WarehouseEditor';
 import InventoryHistory from '../components/InventoryHistory';
+import ComponentCategories from '../components/ComponentCategories';
 import { useAuth } from '../contexts/AuthContext';
 
 const AdminPage = () => {
@@ -304,6 +305,12 @@ const AdminPage = () => {
         >
           История аудитов
         </button>
+        <button
+          className={`tab-button ${activeTab === 'componentCategories' ? 'active' : ''}`}
+          onClick={() => setActiveTab('componentCategories')}
+        >
+          Категории компонентов
+        </button>
         <div className="dropdown">
           <button
             className={`tab-button ${activeTab === 'suppliers' || activeTab === 'ordersHistory' ? 'active' : ''}`}
@@ -591,6 +598,7 @@ const AdminPage = () => {
         {activeTab === 'warehouseEditor' && <WarehouseEditor />}
         {activeTab === 'viewReports' && <ReportsTab />}
         {activeTab === 'auditHistory' && <InventoryHistory isAdmin={true} />}
+        {activeTab === 'componentCategories' && <ComponentCategories />}
       </div>
     </div>
   );

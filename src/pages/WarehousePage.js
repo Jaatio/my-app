@@ -11,6 +11,8 @@ import ShipmentSection from '../components/ShipmentSection';
 import ShipmentHistory from '../components/ShipmentHistory';
 import ReportSection from '../components/ReportSection';
 import AppDownloadDrawer from '../components/AppDownloadDrawer/AppDownloadDrawer';
+import CategorySelector from '../components/CategorySelector';
+import { FaSearch } from 'react-icons/fa';
 
 // Список единиц измерения для радиоэлектронных компонентов
 const UNITS = [
@@ -47,6 +49,7 @@ const WarehousePage = () => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [formData, setFormData] = useState({
     componentName: "",
+    componentType: "",
     nomenclatureCode: "",
     manufacturer: "",
     unit: UNITS[0],
@@ -59,6 +62,7 @@ const WarehousePage = () => {
   });
   const [qrData, setQrData] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState({});
   const [nextNomenclatureCode, setNextNomenclatureCode] = useState(1);
@@ -118,17 +122,13 @@ const WarehousePage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
-      
-      // Автоматический расчет суммы при изменении количества или цены
-      if (name === 'quantity' || name === 'price') {
-        const quantity = name === 'quantity' ? value : prev.quantity;
-        const price = name === 'price' ? value : prev.price;
-        newData.sum = (parseFloat(quantity) * parseFloat(price)).toFixed(2);
+      if (name === 'price' || name === 'quantity') {
+        const price = parseFloat(newData.price) || 0;
+        const quantity = parseFloat(newData.quantity) || 0;
+        newData.sum = (price * quantity).toFixed(2);
       }
-      
       return newData;
     });
   };
@@ -160,19 +160,21 @@ const WarehousePage = () => {
       ? `${selectedWarehouse.name} - ${selectedSection.name}`
       : '';
 
+    // Создаем объект с данными для QR-кода
     const productData = {
-      ...formData,
+      ...formData,  // Здесь включается componentType из formData
       nomenclatureCode: `N${String(nextNomenclatureCode).padStart(6, '0')}`,
       location,
     };
 
-    // Только генерируем QR-код без добавления в базу данных
+    // Преобразуем объект в JSON для QR-кода
     setQrData(JSON.stringify(productData));
     setIsModalOpen(true);
 
     // Очищаем форму
     setFormData({
       componentName: "",
+      componentType: "", // Сбрасываем тип компонента
       nomenclatureCode: "",
       manufacturer: "",
       unit: UNITS[0],
@@ -263,6 +265,7 @@ const WarehousePage = () => {
 
       const headers = [
         "Наименование",
+        "Тип компонента",
         "Код",
         "Производитель",
         "Ед. изм.",
@@ -286,6 +289,7 @@ const WarehousePage = () => {
 
         return [
           (product.componentName || "-").substring(0, 25),
+          (product.componentType || "-").substring(0, 25),
           product.nomenclatureCode || "-",
           (product.manufacturer || "-").substring(0, 25),
           product.unit || "-",
@@ -321,15 +325,16 @@ const WarehousePage = () => {
           valign: "middle"
         },
         columnStyles: {
-          0: { cellWidth: 35 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 25, halign: "right" },
-          5: { cellWidth: 25, halign: "right" },
-          6: { cellWidth: 25, halign: "right" },
-          7: { cellWidth: 30 },
-          8: { cellWidth: 40 }
+          0: { cellWidth: 30 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20, halign: "right" },
+          6: { cellWidth: 20, halign: "right" },
+          7: { cellWidth: 20, halign: "right" },
+          8: { cellWidth: 25 },
+          9: { cellWidth: 35 }
         },
         margin: { top: 20, right: 10, left: 10 },
         pageBreak: "auto",
@@ -397,6 +402,13 @@ const WarehousePage = () => {
       }
     };
     reader.readAsArrayBuffer(file);
+  };
+
+  const handleSelectCategory = (category) => {
+    setFormData(prev => ({
+      ...prev,
+      componentType: category
+    }));
   };
 
   return (
@@ -485,6 +497,25 @@ const WarehousePage = () => {
                 onChange={handleInputChange}
                 required
               />
+            </div>
+            <div className={styles.formField}>
+              <label>Тип компонента</label>
+              <div className={styles.categoryField}>
+                <input
+                  type="text"
+                  name="componentType"
+                  value={formData.componentType}
+                  onChange={handleInputChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className={styles.categoryButton}
+                  onClick={() => setIsCategorySelectorOpen(true)}
+                >
+                  <FaSearch />
+                </button>
+              </div>
             </div>
             <div className={styles.formField}>
               <label>Код номенклатуры</label>
@@ -631,6 +662,7 @@ const WarehousePage = () => {
               <tr>
                 {[
                   "Наименование",
+                  "Тип компонента",
                   "Код",
                   "Производитель",
                   "Ед. изм.",
@@ -649,6 +681,7 @@ const WarehousePage = () => {
               {products.map((product) => (
                 <tr key={product.id}>
                   <td>{product.componentName}</td>
+                  <td>{product.componentType}</td>
                   <td>{product.nomenclatureCode}</td>
                   <td>{product.manufacturer}</td>
                   <td>{product.unit}</td>
@@ -676,6 +709,12 @@ const WarehousePage = () => {
       {selectedOption === "shipmentHistory" && <ShipmentHistory />} 
       {selectedOption === "sendReport" && <ReportSection />}
       {selectedOption === "reportHistory" && <ReportSection />}
+      {isCategorySelectorOpen && (
+        <CategorySelector
+          onSelect={handleSelectCategory}
+          onClose={() => setIsCategorySelectorOpen(false)}
+        />
+      )}
       {isModalOpen && (
         <div className={styles.modalOverlay} onClick={toggleModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>

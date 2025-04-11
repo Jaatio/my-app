@@ -1,0 +1,98 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modalContent h3 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+}
+
+.categoriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.categoryItem {
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.categoryHeader {
+  padding: 8px;
+}
+
+.collapseButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #2c3e50;
+  font-size: 16px;
+  text-align: left;
+}
+
+.collapseButton:hover {
+  background-color: #f8f9fa;
+}
+
+.categoryName {
+  font-weight: 500;
+}
+
+.subcategoriesList {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px 8px 32px;
+  animation: slideDown 0.2s ease-out;
+}
+
+.subcategoryButton {
+  padding: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: #666;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.subcategoryButton:hover {
+  background-color: #f0f0f0;
+  color: #2196F3;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

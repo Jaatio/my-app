@@ -30,6 +30,7 @@ const ShipmentSection = () => {
             unit: data[key].unit || 'шт.',
             location: data[key].location || 'Не указано',
             nomenclatureCode: data[key].nomenclatureCode || `N${String(key).padStart(6, '0')}`,
+            componentType: data[key].componentType || 'Неизвестный тип',
           }))
         : [];
       setProducts(loadedProducts);
@@ -156,6 +157,7 @@ const ShipmentSection = () => {
             <h3>{product.componentName}</h3>
             <div className={styles.productInfo}>
               <p>Код номенклатуры: {product.nomenclatureCode}</p>
+              <p>Тип компонента: {product.componentType}</p>
               <p>Количество: {product.quantity} {product.unit}</p>
               <p>Цена: {product.price.toFixed(2)} ₽</p>
               <p>Местоположение: {product.location}</p>
