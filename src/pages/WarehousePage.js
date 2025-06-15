@@ -489,13 +489,13 @@ const WarehousePage = () => {
           )}
           <form onSubmit={handleCreate} className={styles.qrForm}>
             <div className={styles.formField}>
-              <label>Наименование компонента</label>
-              <input
-                type="text"
+              <label>Наименование компонента и параметры</label>
+              <textarea
                 name="componentName"
                 value={formData.componentName}
                 onChange={handleInputChange}
                 required
+                style={{resize: 'both', minHeight: '40px'}}
               />
             </div>
             <div className={styles.formField}>
@@ -646,9 +646,6 @@ const WarehousePage = () => {
               <button onClick={handleExportExcel} className={styles.excelButton}>
                 Экспорт Excel
               </button>
-              <button onClick={handleExportPDF} className={styles.pdfButton}>
-                Преобразовать в PDF
-              </button>
             </div>
           </div>
 
@@ -660,19 +657,7 @@ const WarehousePage = () => {
           <table className={styles.productsTable}>
             <thead>
               <tr>
-                {[
-                  "Наименование",
-                  "Тип компонента",
-                  "Код",
-                  "Производитель",
-                  "Ед. изм.",
-                  "Количество",
-                  "Цена",
-                  "Сумма",
-                  "Дата поступления",
-                  "Местоположение",
-                  "Действия"
-                ].map((header) => (
+                {["Наименование","Тип компонента","Код","Производитель","Ед. изм.","Количество","Цена","Сумма","Дата поступления","Местоположение"].map((header) => (
                   <th key={header}>{header}</th>
                 ))}
               </tr>
@@ -690,14 +675,6 @@ const WarehousePage = () => {
                   <td>{product.sum} ₽</td>
                   <td>{new Date(product.arrivalDate).toLocaleDateString()}</td>
                   <td>{product.location}</td>
-                  <td>
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      Удалить
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>

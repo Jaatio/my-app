@@ -235,7 +235,6 @@ const InventoryHistory = ({ isAdmin = false }) => {
               </div>
               <div className={styles.inventoryDetails}>
                 <p>Ответственное лицо: {inventory.responsiblePerson}</p>
-                {isAdmin && <p>Аудитор: {inventory.auditorName}</p>}
                 <p>Статус: {inventory.status}</p>
                 <p className={styles.savedDate}>Сохранено: {inventory.savedDate}</p>
                 {inventory.discrepancies && Object.keys(inventory.discrepancies).length > 0 && (

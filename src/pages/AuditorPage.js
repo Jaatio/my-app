@@ -593,7 +593,7 @@ const AuditorPage = () => {
 
         {activeTab === "inventoryHistory" && <InventoryHistory />}
 
-        {activeTab === "reports" && <ReportsTab />}
+        {activeTab === "reports" && <ReportSection />}
       </div>
 
       {/* Модальное окно для сохранения инвентаризации */}

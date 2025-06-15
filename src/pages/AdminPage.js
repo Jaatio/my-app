@@ -10,6 +10,7 @@ import WarehouseEditor from '../components/WarehouseEditor';
 import InventoryHistory from '../components/InventoryHistory';
 import ComponentCategories from '../components/ComponentCategories';
 import { useAuth } from '../contexts/AuthContext';
+import NomenclatureView from '../components/NomenclatureView';
 
 const AdminPage = () => {
   const { currentUser } = useAuth();
@@ -26,6 +27,13 @@ const AdminPage = () => {
     note: '',
   });
   const [adminName, setAdminName] = useState('');
+
+  // Получаем сегодняшнюю дату в формате yyyy-mm-dd
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const minDate = `${yyyy}-${mm}-${dd}`;
 
   // Existing useEffect hooks remain unchanged
   useEffect(() => {
@@ -313,24 +321,24 @@ const AdminPage = () => {
         </button>
         <div className="dropdown">
           <button
-            className={`tab-button ${activeTab === 'suppliers' || activeTab === 'ordersHistory' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'suppliers' ? 'active' : ''}`}
           >
             Поставщики
           </button>
           <div className="dropdown-content">
             <button onClick={() => setActiveTab('suppliers')}>Поставщики</button>
-            <button onClick={() => setActiveTab('ordersHistory')}>История заказов</button>
           </div>
         </div>
         <div className="dropdown">
           <button
-            className={`tab-button ${activeTab === 'warehouse' || activeTab === 'warehouseEditor' ? 'active' : ''}`}
+            className={`tab-button ${activeTab === 'warehouse' || activeTab === 'warehouseEditor' || activeTab === 'nomenclatureView' ? 'active' : ''}`}
           >
             Склад
           </button>
           <div className="dropdown-content">
             <button onClick={() => setActiveTab('warehouse')}>Управление складом</button>
             <button onClick={() => setActiveTab('warehouseEditor')}>Редактирование склада</button>
+            <button onClick={() => setActiveTab('nomenclatureView')}>Просмотр номенклатуры</button>
           </div>
         </div>
       </div>
@@ -413,10 +421,10 @@ const AdminPage = () => {
                 <tbody>
                   <tr>
                     <td>
-                      <input type="date" name="sendDate" required />
+                      <input type="date" name="sendDate" required min={minDate} />
                     </td>
                     <td>
-                      <input type="date" name="finishDate" required />
+                      <input type="date" name="finishDate" required min={minDate} />
                     </td>
                     <td>
                       <textarea
@@ -588,17 +596,12 @@ const AdminPage = () => {
           </div>
         )}
 
-        {activeTab === 'ordersHistory' && (
-          <div className="orders-history">
-            <p>История заказов (будет реализовано позже).</p>
-          </div>
-        )}
-
         {activeTab === 'warehouse' && <WarehouseTab />}
         {activeTab === 'warehouseEditor' && <WarehouseEditor />}
         {activeTab === 'viewReports' && <ReportsTab />}
         {activeTab === 'auditHistory' && <InventoryHistory isAdmin={true} />}
         {activeTab === 'componentCategories' && <ComponentCategories />}
+        {activeTab === 'nomenclatureView' && <NomenclatureView />}
       </div>
     </div>
   );
