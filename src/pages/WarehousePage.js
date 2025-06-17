@@ -69,6 +69,13 @@ const WarehousePage = () => {
 
   const qrRef = useRef(null);
 
+  // Получаем сегодняшнюю дату в формате yyyy-mm-dd для ограничения даты поступления
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const minArrivalDate = `${yyyy}-${mm}-${dd}`;
+
   // Загрузка данных из Firebase
   useEffect(() => {
     // Загрузка продуктов
@@ -152,6 +159,14 @@ const WarehousePage = () => {
 
   const handleCreate = (e) => {
     e.preventDefault();
+    
+    // Проверка на отрицательные значения
+    const price = parseFloat(formData.price);
+    const quantity = parseFloat(formData.quantity);
+    if (price < 0 || quantity < 0) {
+      alert("Цена и количество не могут быть отрицательными!");
+      return;
+    }
     
     // Формирование местоположения из выбранного склада и секции
     const selectedWarehouse = warehouses[formData.warehouseId];
@@ -588,6 +603,7 @@ const WarehousePage = () => {
                 value={formData.arrivalDate}
                 onChange={handleInputChange}
                 required
+                min={minArrivalDate}
               />
             </div>
             <div className={styles.formField}>
